@@ -2,18 +2,25 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Brink Flair",
+        "title": "Connect to Brink Flair 400",
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "serial_port": "Serial port",
+          "baud_rate": "Baud rate",
+          "slave_id": "Modbus slave address"
+        },
+        "data_description": {
+          "serial_port": "Serial port of the RS-485 adapter (e.g. /dev/ttyUSB0). Factory setting: slave address 20, baud rate 19200.",
+          "baud_rate": "Must match menu 14.3 on the device (factory default: 19200).",
+          "slave_id": "Must match menu 14.2 on the device (factory default: 20)."
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the device"
+      "cannot_connect": "Failed to connect — check serial port, wiring, and slave address",
+      "unknown": "Unexpected error — check the Home Assistant logs"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "This device is already configured"
     }
   }
 }

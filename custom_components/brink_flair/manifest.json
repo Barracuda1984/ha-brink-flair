@@ -5,8 +5,8 @@
   "config_flow": true,
   "documentation": "https://github.com/yourusername/brinkflaircomponent",
   "issue_tracker": "https://github.com/yourusername/brinkflaircomponent/issues",
-  "requirements": [],
+  "requirements": ["pymodbus==3.9.2"],
   "dependencies": [],
-  "codeowners": ["@yourusername"],
+  "codeowners": ["@ZdenekSvachula"],
   "iot_class": "local_polling"
 }

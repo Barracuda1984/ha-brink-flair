@@ -5,18 +5,35 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from pymodbus.client import AsyncModbusSerialClient
+from pymodbus.exceptions import ModbusException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_BAUD_RATE,
+    CONF_SERIAL_PORT,
+    CONF_SLAVE_ID,
+    DEFAULT_BAUD_RATE,
+    DEFAULT_SLAVE_ID,
+    DOMAIN,
+    REG_I_ACTIVE_FUNCTION,
+    SERIAL_BYTESIZE,
+    SERIAL_PARITY,
+    SERIAL_STOPBITS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_SERIAL_PORT): str,
+        vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): vol.In(
+            [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200]
+        ),
+        vol.Optional(CONF_SLAVE_ID, default=DEFAULT_SLAVE_ID): vol.All(
+            int, vol.Range(min=1, max=247)
+        ),
     }
 )
 
@@ -33,17 +50,25 @@ class BrinkFlairConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # TODO: validate connection to device
             try:
-                await self._test_connection(user_input[CONF_HOST], user_input[CONF_PORT])
+                await self._test_connection(
+                    user_input[CONF_SERIAL_PORT],
+                    user_input[CONF_BAUD_RATE],
+                    user_input[CONF_SLAVE_ID],
+                )
+            except ModbusException:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error connecting to device")
-                errors["base"] = "cannot_connect"
+                errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                unique_id = (
+                    f"{user_input[CONF_SERIAL_PORT]}_{user_input[CONF_SLAVE_ID]}"
+                )
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"Brink Flair ({user_input[CONF_HOST]})",
+                    title=f"Brink Flair 400 ({user_input[CONF_SERIAL_PORT]})",
                     data=user_input,
                 )
 
@@ -53,7 +78,23 @@ class BrinkFlairConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _test_connection(self, host: str, port: int) -> None:
-        """Test connectivity to the device."""
-        # TODO: implement connection test
-        raise NotImplementedError
+    async def _test_connection(
+        self, serial_port: str, baud_rate: int, slave_id: int
+    ) -> None:
+        """Open the serial port and read one input register to verify connectivity."""
+        client = AsyncModbusSerialClient(
+            port=serial_port,
+            baudrate=baud_rate,
+            bytesize=SERIAL_BYTESIZE,
+            parity=SERIAL_PARITY,
+            stopbits=SERIAL_STOPBITS,
+        )
+        await client.connect()
+        try:
+            result = await client.read_input_registers(
+                address=REG_I_ACTIVE_FUNCTION, count=1, slave=slave_id
+            )
+            if result.isError():
+                raise ModbusException("Device returned error response")
+        finally:
+            client.close()
