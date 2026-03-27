@@ -1,0 +1,211 @@
+# Brink Flair 400 — Lovelace dashboard (Čeština)
+#
+# ID entit předpokládají, že název zařízení je "Brink Flair 400" (generováno integrací automaticky).
+# Pokud jsou vaše ID entit jiná, upravte je zde nebo přejmenujte entity v HA Nastavení → Entity.
+#
+# Tlačítka pro výběr rychlosti ventilátoru vyžadují frontend integraci custom:button-card z HACS.
+# Pokud ji nemáte, nahraďte horizontal-stack jednoduchým select card (viz komentář níže).
+
+title: Brink Flair 400
+path: brink_flair
+icon: mdi:fan
+badges: []
+cards:
+
+  # ── Přehled stavu ─────────────────────────────────────────────────────────────
+  - type: entities
+    title: Stav
+    show_header_toggle: false
+    entities:
+      - entity: sensor.brink_flair_400_status
+        name: Stav
+      - entity: sensor.brink_flair_400_ventilation_mode
+        name: Větrací režim
+      - entity: sensor.brink_flair_400_bypass_status
+        name: Stav bypass
+      - entity: binary_sensor.brink_flair_400_filter_dirty
+        name: Filtr zanesený
+      - entity: sensor.brink_flair_400_current_filter_hours
+        name: Hodiny provozu filtru
+      - entity: sensor.brink_flair_400_frost_status
+        name: Stav protimrazové ochrany
+      - entity: sensor.brink_flair_400_frost_heater_power
+        name: Výkon předehřívače
+      - entity: sensor.brink_flair_400_frost_fan_reduction
+        name: Snížení otáček při mrazu
+      - entity: sensor.brink_flair_400_supply_pressure
+        name: Tlak přívod
+      - entity: sensor.brink_flair_400_exhaust_pressure
+        name: Tlak odvod
+
+  # ── Průtoky vzduchu a otáčky ──────────────────────────────────────────────────
+  - type: entities
+    title: Průtok vzduchu
+    show_header_toggle: false
+    entities:
+      - entity: sensor.brink_flair_400_current_intake_air_volume
+        name: Aktuální průtok přívodu
+      - entity: sensor.brink_flair_400_setpoint_intake_air_volume
+        name: Požadovaný průtok přívodu
+      - entity: sensor.brink_flair_400_current_exhaust_air_volume
+        name: Aktuální průtok odvodu
+      - entity: sensor.brink_flair_400_setpoint_exhaust_air_volume
+        name: Požadovaný průtok odvodu
+      - entity: sensor.brink_flair_400_speed_supply_fan
+        name: Otáčky přívodního ventilátoru
+      - entity: sensor.brink_flair_400_speed_exhaust_fan
+        name: Otáčky odvodního ventilátoru
+
+  # ── Teploty a vlhkost ─────────────────────────────────────────────────────────
+  - type: entities
+    title: Klima
+    show_header_toggle: false
+    entities:
+      - entity: sensor.brink_flair_400_temperature_to_inside
+        name: Teplota do interiéru
+      - entity: sensor.brink_flair_400_humidity_to_inside
+        name: Vlhkost do interiéru
+      - entity: sensor.brink_flair_400_temperature_to_outside
+        name: Teplota do exteriéru
+      - entity: sensor.brink_flair_400_humidity_to_outside
+        name: Vlhkost do exteriéru
+      - entity: sensor.brink_flair_400_temperature_from_outside
+        name: Teplota z exteriéru
+
+  # ── Historie teplot ───────────────────────────────────────────────────────────
+  - type: history-graph
+    title: Teplota (24 h)
+    hours_to_show: 24
+    entities:
+      - entity: sensor.brink_flair_400_temperature_to_inside
+        name: Do interiéru
+      - entity: sensor.brink_flair_400_temperature_to_outside
+        name: Do exteriéru
+      - entity: sensor.brink_flair_400_temperature_from_outside
+        name: Z exteriéru
+
+  # ── Historie vlhkosti ─────────────────────────────────────────────────────────
+  - type: history-graph
+    title: Vlhkost (24 h)
+    hours_to_show: 24
+    entities:
+      - entity: sensor.brink_flair_400_humidity_to_inside
+        name: Do interiéru
+      - entity: sensor.brink_flair_400_humidity_to_outside
+        name: Do exteriéru
+
+  # ── Ovládání větrání ──────────────────────────────────────────────────────────
+  # Varianta A — vyžaduje custom:button-card (HACS)
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: "## Větrací režim"
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            icon: mdi:fan-auto
+            name: Dovolená
+            styles:
+              card:
+                - height: 120px
+            show_state: false
+            state:
+              - operator: template
+                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'holiday' ]]]"
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: select.select_option
+              service_data:
+                option: holiday
+                entity_id: select.brink_flair_400_ventilation_mode
+          - type: custom:button-card
+            icon: mdi:fan-speed-1
+            name: Nízký
+            styles:
+              card:
+                - height: 120px
+            show_state: false
+            state:
+              - operator: template
+                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'low' ]]]"
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: select.select_option
+              service_data:
+                option: low
+                entity_id: select.brink_flair_400_ventilation_mode
+          - type: custom:button-card
+            icon: mdi:fan-speed-2
+            name: Normální
+            styles:
+              card:
+                - height: 120px
+            show_state: false
+            state:
+              - operator: template
+                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'normal' ]]]"
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: select.select_option
+              service_data:
+                option: normal
+                entity_id: select.brink_flair_400_ventilation_mode
+          - type: custom:button-card
+            icon: mdi:fan-speed-3
+            name: Vysoký
+            styles:
+              card:
+                - height: 120px
+            show_state: false
+            state:
+              - operator: template
+                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'high' ]]]"
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: select.select_option
+              service_data:
+                option: high
+                entity_id: select.brink_flair_400_ventilation_mode
+
+  # Varianta B — jednoduchý select card (bez custom karet, odkomentujte pro použití místo Varianty A)
+  # - type: entities
+  #   title: Větrací režim
+  #   entities:
+  #     - entity: select.brink_flair_400_ventilation_mode
+  #       name: Větrací režim
+
+  # ── Nastavení ─────────────────────────────────────────────────────────────────
+  - type: entities
+    title: Nastavení
+    show_header_toggle: false
+    entities:
+      - entity: select.brink_flair_400_bypass_mode
+        name: Režim bypass
+      - entity: number.brink_flair_400_bypass_temp_from_home
+        name: Bypass teplota z interiéru
+      - entity: number.brink_flair_400_bypass_temp_from_outside
+        name: Bypass teplota z exteriéru
+      - entity: number.brink_flair_400_bypass_hysteresis
+        name: Bypass hystereze
+      - entity: number.brink_flair_400_flow_holiday
+        name: Průtok — Dovolená
+      - entity: number.brink_flair_400_flow_low
+        name: Průtok — Nízký
+      - entity: number.brink_flair_400_flow_normal
+        name: Průtok — Normální
+      - entity: number.brink_flair_400_flow_high
+        name: Průtok — Vysoký
+      - entity: number.brink_flair_400_frost_control_temperature
+        name: Teplota protimrazové ochrany
+      - entity: number.brink_flair_400_frost_minimum_inlet_temperature
+        name: Min. teplota přívodu při mrazu
+      - entity: number.brink_flair_400_days_before_filter_warning
+        name: Dní do výměny filtru
+      - entity: button.brink_flair_400_filter_reset
+        name: Reset filtru
+      - entity: button.brink_flair_400_appliance_reset
+        name: Reset zařízení

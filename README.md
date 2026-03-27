@@ -104,6 +104,24 @@ Copy `custom_components/brink_flair/` into your Home Assistant `config/custom_co
 | Filter Reset | Writes 1 to register 8010 |
 | Appliance Reset | Writes 1 to register 8011 _(disabled by default)_ |
 
+## Dashboard
+
+Ready-made Lovelace dashboards are provided in `homeassistant/` in English and Czech.
+
+### Installation
+
+1. Copy the contents of `homeassistant/dashboard_en.yaml` (or `dashboard_cs.yaml`)
+2. In Home Assistant go to **Settings → Dashboards → Add Dashboard**
+3. Give it a name (e.g. *Brink Flair*) and confirm
+4. Open the new dashboard, click ⋮ → **Edit dashboard** → ⋮ → **Raw configuration editor**
+5. Paste the copied YAML and click **Save**
+
+> The ventilation mode buttons use [`custom:button-card`](https://github.com/custom-cards/button-card) (installable via HACS → Frontend). If you prefer not to install it, each dashboard contains a commented-out fallback that uses the built-in `select` card instead.
+
+### Entity IDs
+
+Entity IDs are auto-generated from the device name **Brink Flair 400**, so they follow the pattern `sensor.brink_flair_400_*`. If HA assigned different IDs in your instance, find the correct IDs under **Settings → Entities** and update them in the dashboard YAML.
+
 ## Development
 
 ```bash

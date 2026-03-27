@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojení k Brink Flair 400",
+        "data": {
+          "serial_port": "Sériový port",
+          "baud_rate": "Přenosová rychlost",
+          "slave_id": "Adresa Modbus slave"
+        },
+        "data_description": {
+          "serial_port": "Sériový port RS-485 adaptéru (např. /dev/ttyUSB0). Tovární nastavení: adresa slave 20, přenosová rychlost 19200.",
+          "baud_rate": "Musí odpovídat menu 14.3 na zařízení (tovární výchozí: 19200).",
+          "slave_id": "Musí odpovídat menu 14.2 na zařízení (tovární výchozí: 20)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Připojení se nezdařilo — zkontrolujte sériový port, zapojení a adresu slave",
+      "unknown": "Neočekávaná chyba — zkontrolujte záznamy Home Assistant"
+    },
+    "abort": {
+      "already_configured": "Toto zařízení je již nakonfigurováno"
+    }
+  }
+}
