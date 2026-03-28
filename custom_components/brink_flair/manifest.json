@@ -1,7 +1,7 @@
 {
   "domain": "brink_flair",
   "name": "Brink Flair",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "config_flow": true,
   "documentation": "https://github.com/Barracuda1984/ha-brink-flair",
   "issue_tracker": "https://github.com/Barracuda1984/ha-brink-flair/issues",
