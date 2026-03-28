@@ -18,7 +18,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -272,12 +271,7 @@ class BrinkFlairSensorEntity(CoordinatorEntity[BrinkFlairCoordinator], SensorEnt
         self._attr_unique_id = (
             f"{coordinator.serial_port}_{coordinator.slave_id}_{description.key}"
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.serial_port}_{coordinator.slave_id}")},
-            name="Brink Flair 400",
-            manufacturer="Brink",
-            model="Flair 400",
-        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self) -> Any:

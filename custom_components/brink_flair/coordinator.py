@@ -9,6 +9,7 @@ from pymodbus.client import AsyncModbusSerialClient
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -31,8 +32,12 @@ from .const import (
     REG_H_FROST_CONTROL_TEMP,
     REG_H_FROST_MIN_INLET_TEMP,
     REG_I_ACTIVE_FUNCTION,
+    REG_I_BASE_HW_VERSION,
+    REG_I_BASE_SERIAL,
+    REG_I_BASE_SW_VERSION,
     REG_I_BYPASS_STATUS,
     REG_I_CO2_SENSOR_1_STATUS,
+    REG_I_EXT_SW_VERSION,
     REG_I_FILTER_HOURS,
     REG_I_FILTER_STATUS,
     REG_I_FROST_STATUS,
@@ -40,6 +45,7 @@ from .const import (
     REG_I_SUPPLY_SETPOINT,
     REG_I_EXHAUST_SETPOINT,
     REG_I_SUPPLY_PRESSURE,
+    REG_I_UIF_SW_VERSION,
     REG_RC_APPLIANCE_RESET,
     REG_RC_FILTER_RESET,
     REG_RC_MODBUS_CONTROL,
@@ -74,6 +80,42 @@ def _pressure(raw: int) -> float:
     return _signed(raw) / 10.0
 
 
+def _decode_sw_version(r0: int, r1: int, r2: int) -> str:
+    """Decode three registers into a version string like 'S1.01.03.0001'.
+
+    r0 high byte: ASCII type char (e.g. 0x53 = 'S')
+    r0 low byte:  major number
+    r1 high byte: minor number
+    r1 low byte:  fix number
+    r2:           build number (16-bit word)
+    """
+    type_char = chr((r0 >> 8) & 0xFF)
+    major = r0 & 0xFF
+    minor = (r1 >> 8) & 0xFF
+    fix = r1 & 0xFF
+    build = r2
+    return f"{type_char}{major}.{minor:02d}.{fix:02d}.{build:04d}"
+
+
+def _decode_hw_version(r: int) -> str:
+    """Decode one register into a HW version string like 'H1.1'.
+
+    High byte: major (BCD), low byte: minor (BCD).
+    """
+    major = (r >> 8) & 0xFF
+    minor = r & 0xFF
+    return f"H{major}.{minor}"
+
+
+def _decode_serial(r0: int, r1: int, r2: int) -> str:
+    """Decode three BCD registers into a 12-digit serial number string."""
+    digits = ""
+    for reg in (r0, r1, r2):
+        for shift in (12, 8, 4, 0):
+            digits += str((reg >> shift) & 0xF)
+    return digits
+
+
 class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Polls the Brink Flair 400 via Modbus RTU and exposes data to entities.
 
@@ -92,6 +134,9 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialise the coordinator."""
         self.serial_port = serial_port
         self.slave_id = slave_id
+        self.sw_version: str | None = None
+        self.hw_version: str | None = None
+        self.serial_number: str | None = None
         self._client = AsyncModbusSerialClient(
             port=serial_port,
             baudrate=baud_rate,
@@ -121,6 +166,19 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._client.close()
         _LOGGER.debug("Modbus connection closed")
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry info, including version data when available."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self.serial_port}_{self.slave_id}")},
+            name="Brink Flair 400",
+            manufacturer="Brink",
+            model="Flair 400",
+            sw_version=self.sw_version,
+            hw_version=self.hw_version,
+            serial_number=self.serial_number,
+        )
+
     # ------------------------------------------------------------------
     # Startup initialisation
     # ------------------------------------------------------------------
@@ -140,6 +198,41 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Modbus control mode set to 'switch' (8000=1)")
         except ModbusException as err:
             _LOGGER.warning("Could not set Modbus control mode: %s", err)
+            self._client.close()
+        await self._async_read_device_version()
+
+    async def _async_read_device_version(self) -> None:
+        """Read HW/SW version and serial number registers (once at startup).
+
+        Non-fatal: failures are logged at debug level and the attributes
+        remain None, so DeviceInfo simply omits the fields.
+        """
+        await self._ensure_connected()
+        try:
+            b_sw = await self._client.read_input_registers(
+                address=REG_I_BASE_SW_VERSION, count=3, device_id=self.slave_id
+            )
+            b_hw = await self._client.read_input_registers(
+                address=REG_I_BASE_HW_VERSION, count=1, device_id=self.slave_id
+            )
+            b_serial = await self._client.read_input_registers(
+                address=REG_I_BASE_SERIAL, count=3, device_id=self.slave_id
+            )
+            self.sw_version = _decode_sw_version(
+                b_sw.registers[0], b_sw.registers[1], b_sw.registers[2]
+            )
+            self.hw_version = _decode_hw_version(b_hw.registers[0])
+            self.serial_number = _decode_serial(
+                b_serial.registers[0], b_serial.registers[1], b_serial.registers[2]
+            )
+            _LOGGER.debug(
+                "Device version: SW=%s HW=%s serial=%s",
+                self.sw_version,
+                self.hw_version,
+                self.serial_number,
+            )
+        except Exception as err:
+            _LOGGER.debug("Could not read device version info: %s", err)
             self._client.close()
 
     # ------------------------------------------------------------------

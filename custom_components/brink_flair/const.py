@@ -25,6 +25,21 @@ SERIAL_STOPBITS = 1
 # Flow:         unsigned 16-bit, value in m³/h (no scaling)
 # Fan speed:    unsigned 16-bit, value in RPM (no scaling)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Version / identity registers (FC 0x04, read once at startup)
+# Base module UWA2-B: 4000–4012
+# UIF module:         4400–4403
+# Extension UWA2-E:   4500–4503
+# SW version word layout: high byte = ASCII type char, low byte = major nr
+# HW version word layout: high byte = major (BCD), low byte = minor (BCD)
+# Serial number: 3 registers × 4 BCD digits each = 12-digit string
+# ---------------------------------------------------------------------------
+REG_I_BASE_SW_VERSION = 4000   # batch start 4000..4002 (3 registers)
+REG_I_BASE_HW_VERSION = 4003
+REG_I_BASE_SERIAL = 4010       # batch start 4010..4012 (3 registers)
+REG_I_UIF_SW_VERSION = 4400    # batch start 4400..4403 (4 registers)
+REG_I_EXT_SW_VERSION = 4500    # batch start 4500..4503 (4 registers)
+
 REG_I_ACTIVE_FUNCTION = 4020
 REG_I_VENTILATION_MODE = 4022
 REG_I_SUPPLY_PRESSURE = 4023

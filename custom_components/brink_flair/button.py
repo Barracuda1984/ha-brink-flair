@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -70,12 +69,7 @@ class BrinkFlairButtonEntity(
         self._attr_unique_id = (
             f"{coordinator.serial_port}_{coordinator.slave_id}_{description.key}"
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.serial_port}_{coordinator.slave_id}")},
-            name="Brink Flair 400",
-            manufacturer="Brink",
-            model="Flair 400",
-        )
+        self._attr_device_info = coordinator.device_info
 
     async def async_press(self) -> None:
         await self.entity_description.press_fn(self.coordinator)
