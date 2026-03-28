@@ -21,6 +21,7 @@ from .const import (
     FROST_STATUS_MAP,
     MODBUS_CONTROL_MAP,
     REG_H_BYPASS_BOOST,
+    REG_H_BYPASS_BOOST_POSITION,
     REG_H_BYPASS_HYSTERESIS,
     REG_H_BYPASS_MODE,
     REG_H_BYPASS_TEMP_DWELLING,
@@ -38,9 +39,12 @@ from .const import (
     REG_I_BYPASS_STATUS,
     REG_I_CO2_SENSOR_1_STATUS,
     REG_I_EXT_SW_VERSION,
+    REG_H_IMBALANCE_EXHAUST,
+    REG_H_IMBALANCE_SUPPLY,
     REG_I_FILTER_HOURS,
     REG_I_FILTER_STATUS,
     REG_I_FROST_STATUS,
+    REG_I_OPERATING_TIME,
     REG_I_OUTSIDE_TEMPERATURE,
     REG_I_SUPPLY_SETPOINT,
     REG_I_EXHAUST_SETPOINT,
@@ -270,8 +274,9 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             b_frost = await self._client.read_input_registers(
                 address=REG_I_FROST_STATUS, count=3, device_id=self.slave_id
             )
+            # FC04 batch — 4081..4083: NTC1 outside temp, NTC2 second sensor, RHT humidity
             b_ntc = await self._client.read_input_registers(
-                address=REG_I_OUTSIDE_TEMPERATURE, count=1, device_id=self.slave_id
+                address=REG_I_OUTSIDE_TEMPERATURE, count=3, device_id=self.slave_id
             )
             b_filter = await self._client.read_input_registers(
                 address=REG_I_FILTER_STATUS, count=1, device_id=self.slave_id
@@ -279,13 +284,21 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             b_fh = await self._client.read_input_registers(
                 address=REG_I_FILTER_HOURS, count=1, device_id=self.slave_id
             )
+            # FC04 batch — 4113..4114: operating time (32-bit, high word first)
+            b_optime = await self._client.read_input_registers(
+                address=REG_I_OPERATING_TIME, count=2, device_id=self.slave_id
+            )
             # FC03 batch — 6000..6003: flow presets 0–3
             b_presets = await self._client.read_holding_registers(
                 address=REG_H_FLOW_PRESET_0, count=4, device_id=self.slave_id
             )
-            # FC03 batch — 6100..6104: bypass mode, temps, hysteresis, boost
+            # FC03 batch — 6035..6036: supply/exhaust imbalance offsets
+            b_imbalance = await self._client.read_holding_registers(
+                address=REG_H_IMBALANCE_SUPPLY, count=2, device_id=self.slave_id
+            )
+            # FC03 batch — 6100..6105: bypass mode, temps, hysteresis, boost, boost position
             b_bypass_cfg = await self._client.read_holding_registers(
-                address=REG_H_BYPASS_MODE, count=5, device_id=self.slave_id
+                address=REG_H_BYPASS_MODE, count=6, device_id=self.slave_id
             )
             # FC03 batch — 6110..6111: frost settings
             b_frost_cfg = await self._client.read_holding_registers(
@@ -339,6 +352,9 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "frost_heater_power": b_frost.registers[1],
             "frost_fan_reduction": b_frost.registers[2],
             "outside_temperature": _temp(b_ntc.registers[0]),
+            "ntc2_temperature": _temp(b_ntc.registers[1]),
+            "rht_humidity": _humidity(b_ntc.registers[2]),
+            "operating_time": (b_optime.registers[0] << 16) | b_optime.registers[1],
             "filter_dirty": bool(b_filter.registers[0]),
             "filter_hours": b_fh.registers[0],
             # Flow presets (FC03 holding)
@@ -346,12 +362,16 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "flow_preset_1": b_presets.registers[1],
             "flow_preset_2": b_presets.registers[2],
             "flow_preset_3": b_presets.registers[3],
+            # Imbalance offsets (FC03 holding)
+            "imbalance_supply": _signed(b_imbalance.registers[0]),
+            "imbalance_exhaust": _signed(b_imbalance.registers[1]),
             # Bypass config (FC03 holding)
             "bypass_mode": b_bypass_cfg.registers[0],
             "bypass_temp_dwelling": _temp(b_bypass_cfg.registers[1]),
             "bypass_temp_outside": _temp(b_bypass_cfg.registers[2]),
             "bypass_hysteresis": _temp(b_bypass_cfg.registers[3]),
             "bypass_boost": bool(b_bypass_cfg.registers[4]),
+            "bypass_boost_position": b_bypass_cfg.registers[5],
             # Frost config (FC03 holding)
             "frost_control_temp": _temp(b_frost_cfg.registers[0]),
             "frost_min_inlet_temp": _temp(b_frost_cfg.registers[1]),
@@ -440,6 +460,18 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_standby(self, standby: bool) -> None:
         """Set standby (True) or resume normal mode (False) via register 8003."""
         await self._write_register(REG_RC_STANDBY, 1 if standby else 2)
+
+    async def async_set_imbalance_supply(self, value: int) -> None:
+        """Set supply imbalance offset (% correction, signed, -15..+15)."""
+        await self._write_register(REG_H_IMBALANCE_SUPPLY, value & 0xFFFF)
+
+    async def async_set_imbalance_exhaust(self, value: int) -> None:
+        """Set exhaust imbalance offset (% correction, signed, -15..+15)."""
+        await self._write_register(REG_H_IMBALANCE_EXHAUST, value & 0xFFFF)
+
+    async def async_set_bypass_boost_position(self, value: int) -> None:
+        """Set bypass boost step preset (0–3) via register 6105."""
+        await self._write_register(REG_H_BYPASS_BOOST_POSITION, value)
 
     async def async_set_co2_mode(self, enabled: bool) -> None:
         """Enable or disable CO2 sensor control mode via register 6150."""

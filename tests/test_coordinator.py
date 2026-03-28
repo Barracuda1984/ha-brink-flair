@@ -49,23 +49,25 @@ async def test_temperature_signed_positive(hass):
     client.connected = True
     client.read_input_registers = AsyncMock(
         side_effect=[
-            _reg(12, 0, 2, 125, 65426),   # b1
+            _reg(12, 0, 2, 125, 65426),            # b1
             _reg(200, 198, 0, 1450, 0, 223, 450),  # b2 — supply_temperature=22.3
             _reg(200, 195, 0, 1420, 0, 201, 500),  # b3
-            _reg(4),   # bypass
-            _reg(2, 0, 0),  # frost
-            _reg(85),  # outside temp
-            _reg(0),   # filter status
-            _reg(720), # filter hours
+            _reg(4),                               # bypass
+            _reg(2, 0, 0),                         # frost
+            _reg(85, 0, 0),                        # ntc1, ntc2, rht
+            _reg(0),                               # filter status
+            _reg(720),                             # filter hours
+            _reg(0, 0),                            # operating time
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
-            _reg(75, 150, 200, 300),     # presets
-            _reg(0, 240, 120, 20, 0),    # bypass cfg
-            _reg(10, 150),               # frost cfg
-            _reg(180),                   # filter days
-            _reg(1, 2, 200, 0),          # ctrl
+            _reg(75, 150, 200, 300),        # presets
+            _reg(0, 0),                     # imbalance
+            _reg(0, 240, 120, 20, 0, 0),    # bypass cfg
+            _reg(10, 150),                  # frost cfg
+            _reg(180),                      # filter days
+            _reg(1, 2, 200, 0),             # ctrl
         ]
     )
     coord._client = client
@@ -88,15 +90,17 @@ async def test_temperature_signed_negative(hass):
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),
             _reg(2, 0, 0),
-            _reg(85),
+            _reg(85, 0, 0),
             _reg(0),
             _reg(720),
+            _reg(0, 0),
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
             _reg(75, 150, 200, 300),
-            _reg(0, 240, 120, 20, 0),
+            _reg(0, 0),
+            _reg(0, 240, 120, 20, 0, 0),
             _reg(10, 150),
             _reg(180),
             _reg(1, 2, 200, 0),
@@ -121,15 +125,17 @@ async def test_pressure_negative(hass):
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),
             _reg(2, 0, 0),
-            _reg(85),
+            _reg(85, 0, 0),
             _reg(0),
             _reg(720),
+            _reg(0, 0),
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
             _reg(75, 150, 200, 300),
-            _reg(0, 240, 120, 20, 0),
+            _reg(0, 0),
+            _reg(0, 240, 120, 20, 0, 0),
             _reg(10, 150),
             _reg(180),
             _reg(1, 2, 200, 0),
@@ -154,15 +160,17 @@ async def test_ventilation_mode_map(hass):
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),
             _reg(2, 0, 0),
-            _reg(85),
+            _reg(85, 0, 0),
             _reg(0),
             _reg(720),
+            _reg(0, 0),
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
             _reg(75, 150, 200, 300),
-            _reg(0, 240, 120, 20, 0),
+            _reg(0, 0),
+            _reg(0, 240, 120, 20, 0, 0),
             _reg(10, 150),
             _reg(180),
             _reg(1, 2, 200, 0),
@@ -187,15 +195,17 @@ async def test_bypass_boost_decoded(hass):
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),
             _reg(2, 0, 0),
-            _reg(85),
+            _reg(85, 0, 0),
             _reg(0),
             _reg(720),
+            _reg(0, 0),
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
             _reg(75, 150, 200, 300),
-            _reg(0, 240, 120, 20, 1),   # bypass_boost = 1
+            _reg(0, 0),
+            _reg(0, 240, 120, 20, 1, 0),   # bypass_boost = 1
             _reg(10, 150),
             _reg(180),
             _reg(1, 2, 200, 0),
@@ -220,15 +230,17 @@ async def test_filter_dirty_decoded(hass):
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),
             _reg(2, 0, 0),
-            _reg(85),
+            _reg(85, 0, 0),
             _reg(1),   # filter dirty!
             _reg(720),
+            _reg(0, 0),
         ]
     )
     client.read_holding_registers = AsyncMock(
         side_effect=[
             _reg(75, 150, 200, 300),
-            _reg(0, 240, 120, 20, 0),
+            _reg(0, 0),
+            _reg(0, 240, 120, 20, 0, 0),
             _reg(10, 150),
             _reg(180),
             _reg(1, 2, 200, 0),

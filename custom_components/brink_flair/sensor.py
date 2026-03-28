@@ -157,6 +157,31 @@ SENSOR_DESCRIPTIONS: tuple[BrinkFlairSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda d: d.get("frost_fan_reduction"),
     ),
+    # ── Additional temperature / humidity sensors ─────────────────────
+    BrinkFlairSensorEntityDescription(
+        key="ntc2_temperature",
+        name="Temperature NTC2",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda d: d.get("ntc2_temperature"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="rht_humidity",
+        name="Humidity RHT Sensor",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda d: d.get("rht_humidity"),
+    ),
+    # ── Operating time ────────────────────────────────────────────────
+    BrinkFlairSensorEntityDescription(
+        key="operating_time",
+        name="Operating Time",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="h",
+        value_fn=lambda d: d.get("operating_time"),
+    ),
     # ── Filter ────────────────────────────────────────────────────────
     BrinkFlairSensorEntityDescription(
         key="filter_hours",

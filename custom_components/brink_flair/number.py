@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature, UnitOfVolumeFlowRate
+from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -157,6 +157,43 @@ NUMBER_DESCRIPTIONS: tuple[BrinkFlairNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
         value_fn=lambda d: d.get("filter_change_days"),
         set_fn=lambda c, v: c.async_set_filter_change_days(round(v)),
+    ),
+    # ── Imbalance offsets (holding registers 6035–6036) ──────────────
+    BrinkFlairNumberEntityDescription(
+        key="imbalance_supply",
+        name="Supply Imbalance Offset",
+        icon="mdi:arrow-up-circle-outline",
+        native_min_value=-15,
+        native_max_value=15,
+        native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.BOX,
+        value_fn=lambda d: d.get("imbalance_supply"),
+        set_fn=lambda c, v: c.async_set_imbalance_supply(round(v)),
+    ),
+    BrinkFlairNumberEntityDescription(
+        key="imbalance_exhaust",
+        name="Exhaust Imbalance Offset",
+        icon="mdi:arrow-down-circle-outline",
+        native_min_value=-15,
+        native_max_value=15,
+        native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.BOX,
+        value_fn=lambda d: d.get("imbalance_exhaust"),
+        set_fn=lambda c, v: c.async_set_imbalance_exhaust(round(v)),
+    ),
+    # ── Bypass boost position (holding register 6105) ─────────────────
+    BrinkFlairNumberEntityDescription(
+        key="bypass_boost_position",
+        name="Bypass Boost Position",
+        icon="mdi:valve-open",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        mode=NumberMode.BOX,
+        value_fn=lambda d: d.get("bypass_boost_position"),
+        set_fn=lambda c, v: c.async_set_bypass_boost_position(round(v)),
     ),
     # ── CO2 thresholds (holding registers 6151–6158) ──────────────────
     BrinkFlairNumberEntityDescription(

@@ -55,6 +55,9 @@ COORDINATOR_DATA: dict[str, Any] = {
     "frost_heater_power": 0,
     "frost_fan_reduction": 0,
     "outside_temperature": 8.5,
+    "ntc2_temperature": 8.6,
+    "rht_humidity": 45,
+    "operating_time": 720,
     "filter_dirty": False,
     "filter_hours": 720,
     # Flow presets
@@ -62,12 +65,16 @@ COORDINATOR_DATA: dict[str, Any] = {
     "flow_preset_1": 150,
     "flow_preset_2": 200,
     "flow_preset_3": 300,
+    # Imbalance offsets
+    "imbalance_supply": 0,
+    "imbalance_exhaust": 0,
     # Bypass config
     "bypass_mode": 0,
     "bypass_temp_dwelling": 24.0,
     "bypass_temp_outside": 12.0,
     "bypass_hysteresis": 2.0,
     "bypass_boost": False,
+    "bypass_boost_position": 2,
     # Frost config
     "frost_control_temp": 1.0,
     "frost_min_inlet_temp": 15.0,
@@ -119,24 +126,26 @@ def mock_modbus_client() -> Generator[MagicMock, None, None]:
         # batch 3: 4041..4047  (exhaust: setpoint, flow, skip, rpm, skip, temp, humidity)
         b3 = _make_register_result(200, 195, 0, 1420, 0, 201, 50)   # humidity=50 %
         # single reads
-        b_bypass = _make_register_result(4)          # closed
-        b_frost = _make_register_result(2, 0, 0)     # no_frost, heater=0, reduction=0
-        b_ntc = _make_register_result(85)             # 8.5 °C
-        b_filter = _make_register_result(0)           # not dirty
-        b_fh = _make_register_result(720)             # 720 hours
+        b_bypass = _make_register_result(4)                    # closed
+        b_frost = _make_register_result(2, 0, 0)               # no_frost, heater=0, reduction=0
+        b_ntc = _make_register_result(85, 86, 45)              # NTC1=8.5°C, NTC2=8.6°C, RHT=45%
+        b_filter = _make_register_result(0)                    # not dirty
+        b_fh = _make_register_result(720)                      # 720 hours
+        b_optime = _make_register_result(0, 720)               # 720 lifetime hours (32-bit)
         # FC03 holding reads
         b_presets = _make_register_result(75, 150, 200, 300)
-        b_bypass_cfg = _make_register_result(0, 240, 120, 20, 0)  # auto, 24°C, 12°C, 2°C, boost=off
-        b_frost_cfg = _make_register_result(10, 150)  # 1.0°C, 15.0°C
+        b_imbalance = _make_register_result(0, 0)              # 0% supply, 0% exhaust offset
+        b_bypass_cfg = _make_register_result(0, 240, 120, 20, 0, 2)  # auto, 24°C, 12°C, 2°C, boost=off, position=2
+        b_frost_cfg = _make_register_result(10, 150)           # 1.0°C, 15.0°C
         b_fcd = _make_register_result(180)
-        b_ctrl = _make_register_result(1, 2, 200, 0)  # modbus_switch, normal, 200, not standby
+        b_ctrl = _make_register_result(1, 2, 200, 0)           # modbus_switch, normal, 200, not standby
 
         client.read_input_registers = AsyncMock(
-            side_effect=[b1, b2, b3, b_bypass, b_frost, b_ntc, b_filter, b_fh]
+            side_effect=[b1, b2, b3, b_bypass, b_frost, b_ntc, b_filter, b_fh, b_optime]
             * 100  # repeat so multiple poll cycles work
         )
         client.read_holding_registers = AsyncMock(
-            side_effect=[b_presets, b_bypass_cfg, b_frost_cfg, b_fcd, b_ctrl] * 100
+            side_effect=[b_presets, b_imbalance, b_bypass_cfg, b_frost_cfg, b_fcd, b_ctrl] * 100
         )
 
         yield client
