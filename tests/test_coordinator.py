@@ -110,13 +110,13 @@ async def test_temperature_signed_negative(hass):
 
 
 async def test_pressure_negative(hass):
-    """Exhaust pressure raw 65426 → -11.0 Pa (signed ÷10)."""
+    """Exhaust pressure raw 65525 (= 65536-11) → -11 Pa (signed, no scaling)."""
     coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
     client = MagicMock()
     client.connected = True
     client.read_input_registers = AsyncMock(
         side_effect=[
-            _reg(12, 0, 2, 125, 65426),  # exhaust_pressure raw=65426
+            _reg(12, 0, 2, 125, 65525),  # exhaust_pressure raw=65525 → -11 Pa
             _reg(200, 198, 0, 1450, 0, 223, 450),
             _reg(200, 195, 0, 1420, 0, 201, 500),
             _reg(4),

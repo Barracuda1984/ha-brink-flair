@@ -70,14 +70,14 @@ def _temp(raw: int) -> float:
     return _signed(raw) / 10.0
 
 
-def _humidity(raw: int) -> float:
-    """Unsigned 16-bit register in tenths of % → %."""
-    return raw / 10.0
+def _humidity(raw: int) -> int:
+    """Unsigned 16-bit register → % (device stores integer %, not tenths)."""
+    return raw
 
 
-def _pressure(raw: int) -> float:
-    """Signed 16-bit register in tenths of Pa → Pa."""
-    return _signed(raw) / 10.0
+def _pressure(raw: int) -> int:
+    """Signed 16-bit register → Pa (device stores integer Pa, not tenths)."""
+    return _signed(raw)
 
 
 def _decode_sw_version(r0: int, r1: int, r2: int) -> str:

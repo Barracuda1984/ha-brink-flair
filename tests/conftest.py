@@ -35,20 +35,20 @@ COORDINATOR_DATA: dict[str, Any] = {
     # Status
     "active_function": "auto_modbus",
     "ventilation_mode": "normal",
-    "supply_pressure": 12.5,
-    "exhaust_pressure": -11.0,
+    "supply_pressure": 125,
+    "exhaust_pressure": -11,
     # Supply fan
     "supply_setpoint": 200,
     "supply_flow": 198,
     "supply_fan_rpm": 1450,
     "supply_temperature": 22.3,
-    "supply_humidity": 45.0,
+    "supply_humidity": 45,
     # Exhaust fan
     "exhaust_setpoint": 200,
     "exhaust_flow": 195,
     "exhaust_fan_rpm": 1420,
     "exhaust_temperature": 20.1,
-    "exhaust_humidity": 50.0,
+    "exhaust_humidity": 50,
     # System
     "bypass_status": "closed",
     "frost_status": "no_frost",
@@ -113,11 +113,11 @@ def mock_modbus_client() -> Generator[MagicMock, None, None]:
 
         # FC04 input-register reads — return plausible raw register values
         # batch 1: 4020..4024  (active_function, skip, ventilation_mode, supply_pressure, exhaust_pressure)
-        b1 = _make_register_result(12, 0, 2, 125, 65426)   # 65426 = -110 signed → -11.0 Pa
+        b1 = _make_register_result(12, 0, 2, 125, 65525)   # supply=125 Pa, exhaust=65525→-11 Pa
         # batch 2: 4031..4037  (supply: setpoint, flow, skip, rpm, skip, temp, humidity)
-        b2 = _make_register_result(200, 198, 0, 1450, 0, 223, 450)
+        b2 = _make_register_result(200, 198, 0, 1450, 0, 223, 45)   # humidity=45 %
         # batch 3: 4041..4047  (exhaust: setpoint, flow, skip, rpm, skip, temp, humidity)
-        b3 = _make_register_result(200, 195, 0, 1420, 0, 201, 500)
+        b3 = _make_register_result(200, 195, 0, 1420, 0, 201, 50)   # humidity=50 %
         # single reads
         b_bypass = _make_register_result(4)          # closed
         b_frost = _make_register_result(2, 0, 0)     # no_frost, heater=0, reduction=0
