@@ -124,12 +124,49 @@ Entity IDs are auto-generated from the device name **Brink Flair 400**, so they 
 
 ## Development
 
-```bash
-# Install dev dependencies
-pip install homeassistant pymodbus==3.9.2
+### Virtual environment
 
-# Run HA with this integration loaded
+```bash
+python -m venv venv
+
+# Linux / macOS
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+
+pip install homeassistant pymodbus==3.9.2
+```
+
+To run HA with this integration loaded:
+
+```bash
 hass -c .
 ```
+
+### Tests
+
+Install test dependencies (inside the virtualenv):
+
+```bash
+pip install -r requirements_test.txt
+```
+
+Run the full test suite:
+
+```bash
+pytest
+```
+
+Useful options:
+
+```bash
+pytest -v                          # verbose output
+pytest --cov                       # coverage report
+pytest tests/test_coordinator.py   # single file
+pytest -k "test_temperature"       # tests matching a keyword
+```
+
+The tests use `pytest-homeassistant-custom-component` which provides the `hass` fixture and stubs the HA core. The Modbus client is always mocked — no hardware required.
 
 Bump the version in `custom_components/brink_flair/manifest.json` before releasing.
