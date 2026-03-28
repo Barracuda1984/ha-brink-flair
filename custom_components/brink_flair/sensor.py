@@ -187,6 +187,59 @@ SENSOR_DESCRIPTIONS: tuple[BrinkFlairSensorEntityDescription, ...] = (
         name="Frost Status",
         value_fn=lambda d: d.get("frost_status"),
     ),
+    # ── CO2 sensors ───────────────────────────────────────────────────
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_1_value",
+        name="CO2 Sensor 1",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="ppm",
+        value_fn=lambda d: d.get("co2_sensor_1_value"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_2_value",
+        name="CO2 Sensor 2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="ppm",
+        value_fn=lambda d: d.get("co2_sensor_2_value"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_3_value",
+        name="CO2 Sensor 3",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="ppm",
+        value_fn=lambda d: d.get("co2_sensor_3_value"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_4_value",
+        name="CO2 Sensor 4",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="ppm",
+        value_fn=lambda d: d.get("co2_sensor_4_value"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_1_status",
+        name="CO2 Sensor 1 Status",
+        value_fn=lambda d: d.get("co2_sensor_1_status"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_2_status",
+        name="CO2 Sensor 2 Status",
+        value_fn=lambda d: d.get("co2_sensor_2_status"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_3_status",
+        name="CO2 Sensor 3 Status",
+        value_fn=lambda d: d.get("co2_sensor_3_status"),
+    ),
+    BrinkFlairSensorEntityDescription(
+        key="co2_sensor_4_status",
+        name="CO2 Sensor 4 Status",
+        value_fn=lambda d: d.get("co2_sensor_4_status"),
+    ),
 )
 
 

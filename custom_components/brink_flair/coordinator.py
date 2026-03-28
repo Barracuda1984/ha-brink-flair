@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ACTIVE_FUNCTION_MAP,
     BYPASS_STATUS_MAP,
+    CO2_STATUS_MAP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FROST_STATUS_MAP,
@@ -23,12 +24,15 @@ from .const import (
     REG_H_BYPASS_MODE,
     REG_H_BYPASS_TEMP_DWELLING,
     REG_H_BYPASS_TEMP_OUTSIDE,
+    REG_H_CO2_MODE,
+    REG_H_CO2_SENSOR_1_LOW,
     REG_H_FILTER_CHANGE_DAYS,
     REG_H_FLOW_PRESET_0,
     REG_H_FROST_CONTROL_TEMP,
     REG_H_FROST_MIN_INLET_TEMP,
     REG_I_ACTIVE_FUNCTION,
     REG_I_BYPASS_STATUS,
+    REG_I_CO2_SENSOR_1_STATUS,
     REG_I_FILTER_HOURS,
     REG_I_FILTER_STATUS,
     REG_I_FROST_STATUS,
@@ -202,6 +206,17 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             b_ctrl = await self._client.read_holding_registers(
                 address=REG_RC_MODBUS_CONTROL, count=4, device_id=self.slave_id
             )
+            # FC04 batch — 4200..4207: CO2 sensor status + values (4 sensors × 2 registers)
+            b_co2 = await self._client.read_input_registers(
+                address=REG_I_CO2_SENSOR_1_STATUS, count=8, device_id=self.slave_id
+            )
+            # FC03 — 6150: CO2 mode; 6151..6158: low/high thresholds for sensors 1–4
+            b_co2_mode = await self._client.read_holding_registers(
+                address=REG_H_CO2_MODE, count=1, device_id=self.slave_id
+            )
+            b_co2_cfg = await self._client.read_holding_registers(
+                address=REG_H_CO2_SENSOR_1_LOW, count=8, device_id=self.slave_id
+            )
         except Exception:
             # Close on any error so the next cycle triggers a fresh reconnect.
             self._client.close()
@@ -254,6 +269,25 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "ventilation_step": b_ctrl.registers[1],
             "flow_rate_setpoint": b_ctrl.registers[2],
             "standby": bool(b_ctrl.registers[3]),
+            # CO2 sensors (FC04 input)
+            "co2_sensor_1_status": CO2_STATUS_MAP.get(b_co2.registers[0], "unknown"),
+            "co2_sensor_1_value": b_co2.registers[1],
+            "co2_sensor_2_status": CO2_STATUS_MAP.get(b_co2.registers[2], "unknown"),
+            "co2_sensor_2_value": b_co2.registers[3],
+            "co2_sensor_3_status": CO2_STATUS_MAP.get(b_co2.registers[4], "unknown"),
+            "co2_sensor_3_value": b_co2.registers[5],
+            "co2_sensor_4_status": CO2_STATUS_MAP.get(b_co2.registers[6], "unknown"),
+            "co2_sensor_4_value": b_co2.registers[7],
+            # CO2 config (FC03 holding)
+            "co2_mode": bool(b_co2_mode.registers[0]),
+            "co2_sensor_1_low": b_co2_cfg.registers[0],
+            "co2_sensor_1_high": b_co2_cfg.registers[1],
+            "co2_sensor_2_low": b_co2_cfg.registers[2],
+            "co2_sensor_2_high": b_co2_cfg.registers[3],
+            "co2_sensor_3_low": b_co2_cfg.registers[4],
+            "co2_sensor_3_high": b_co2_cfg.registers[5],
+            "co2_sensor_4_low": b_co2_cfg.registers[6],
+            "co2_sensor_4_high": b_co2_cfg.registers[7],
         }
 
     # ------------------------------------------------------------------
@@ -313,6 +347,16 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_standby(self, standby: bool) -> None:
         """Set standby (True) or resume normal mode (False) via register 8003."""
         await self._write_register(REG_RC_STANDBY, 1 if standby else 2)
+
+    async def async_set_co2_mode(self, enabled: bool) -> None:
+        """Enable or disable CO2 sensor control mode via register 6150."""
+        await self._write_register(REG_H_CO2_MODE, 1 if enabled else 0)
+
+    async def async_set_co2_threshold(self, sensor: int, low: int, high: int) -> None:
+        """Set CO2 low/high thresholds for a sensor (sensor: 1–4, values in ppm)."""
+        base = REG_H_CO2_SENSOR_1_LOW + (sensor - 1) * 2
+        await self._write_register(base, low)
+        await self._write_register(base + 1, high)
 
     async def _write_register(self, address: int, value: int) -> None:
         await self._ensure_connected()

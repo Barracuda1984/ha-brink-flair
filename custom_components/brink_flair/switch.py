@@ -41,6 +41,14 @@ SWITCH_DESCRIPTIONS: tuple[BrinkFlairSwitchEntityDescription, ...] = (
         turn_on_fn=lambda c: c.async_set_bypass_boost(True),
         turn_off_fn=lambda c: c.async_set_bypass_boost(False),
     ),
+    BrinkFlairSwitchEntityDescription(
+        key="co2_mode",
+        name="CO2 Control Mode",
+        icon="mdi:molecule-co2",
+        is_on_fn=lambda d: d.get("co2_mode"),
+        turn_on_fn=lambda c: c.async_set_co2_mode(True),
+        turn_off_fn=lambda c: c.async_set_co2_mode(False),
+    ),
 )
 
 

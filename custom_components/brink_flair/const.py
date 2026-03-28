@@ -46,6 +46,14 @@ REG_I_FROST_FAN_REDUCTION = 4072
 REG_I_OUTSIDE_TEMPERATURE = 4081  # NTC1
 REG_I_FILTER_STATUS = 4100
 REG_I_FILTER_HOURS = 4115
+REG_I_CO2_SENSOR_1_STATUS = 4200  # batch start: 4200..4207 (8 registers)
+REG_I_CO2_SENSOR_1_VALUE = 4201
+REG_I_CO2_SENSOR_2_STATUS = 4202
+REG_I_CO2_SENSOR_2_VALUE = 4203
+REG_I_CO2_SENSOR_3_STATUS = 4204
+REG_I_CO2_SENSOR_3_VALUE = 4205
+REG_I_CO2_SENSOR_4_STATUS = 4206
+REG_I_CO2_SENSOR_4_VALUE = 4207
 
 # ---------------------------------------------------------------------------
 # Holding registers (FC 0x03 read / 0x06 write) — settings, addresses 6000–7992
@@ -63,6 +71,15 @@ REG_H_BYPASS_BOOST_POSITION = 6105 # 0–3 (step preset)
 REG_H_FROST_CONTROL_TEMP = 6110    # tenths °C, 0–30 (0–3 °C)
 REG_H_FROST_MIN_INLET_TEMP = 6111  # tenths °C, 70–220 (7–22 °C)
 REG_H_FILTER_CHANGE_DAYS = 6120    # 1–365 days
+REG_H_CO2_MODE = 6150              # 0=off, 1=on
+REG_H_CO2_SENSOR_1_LOW = 6151     # ppm, 400–2000; batch start: 6151..6158 (8 registers)
+REG_H_CO2_SENSOR_1_HIGH = 6152
+REG_H_CO2_SENSOR_2_LOW = 6153
+REG_H_CO2_SENSOR_2_HIGH = 6154
+REG_H_CO2_SENSOR_3_LOW = 6155
+REG_H_CO2_SENSOR_3_HIGH = 6156
+REG_H_CO2_SENSOR_4_LOW = 6157
+REG_H_CO2_SENSOR_4_HIGH = 6158
 
 # ---------------------------------------------------------------------------
 # Remote control registers (FC 0x03 read / 0x06 write) — commands, 8000–8011
@@ -137,6 +154,16 @@ MODBUS_CONTROL_MAP: dict[int, str] = {
     0: "device_lcd",
     1: "modbus_switch",
     2: "modbus_flow",
+}
+
+CO2_STATUS_MAP: dict[int, str] = {
+    0: "error",
+    1: "not_initialized",
+    2: "idle",
+    3: "warming_up",
+    4: "running",
+    5: "calibrating",
+    6: "self_test",
 }
 
 # Options for select entities
