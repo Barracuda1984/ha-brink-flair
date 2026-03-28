@@ -27,6 +27,8 @@ cards:
         name: Filtr zanesený
       - entity: sensor.brink_flair_400_current_filter_hours
         name: Hodiny provozu filtru
+      - entity: sensor.brink_flair_400_operating_time
+        name: Celkový počet provozních hodin
       - entity: sensor.brink_flair_400_frost_status
         name: Stav protimrazové ochrany
       - entity: sensor.brink_flair_400_frost_heater_power
@@ -71,6 +73,10 @@ cards:
         name: Vlhkost do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Teplota z exteriéru
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: Teplota NTC2
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: Vlhkost snímač RHT
 
   # ── Historie teplot ───────────────────────────────────────────────────────────
   - type: history-graph
@@ -83,6 +89,8 @@ cards:
         name: Do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Z exteriéru
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: NTC2
 
   # ── Historie vlhkosti ─────────────────────────────────────────────────────────
   - type: history-graph
@@ -93,6 +101,8 @@ cards:
         name: Do interiéru
       - entity: sensor.brink_flair_400_humidity_to_outside
         name: Do exteriéru
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: Snímač RHT
 
   # ── Ovládání větrání ──────────────────────────────────────────────────────────
   # Varianta A — vyžaduje custom:button-card (HACS)
@@ -205,6 +215,12 @@ cards:
         name: Min. teplota přívodu při mrazu
       - entity: number.brink_flair_400_days_before_filter_warning
         name: Dní do výměny filtru
+      - entity: number.brink_flair_400_supply_imbalance_offset
+        name: Korekce nerovnováhy přívodu
+      - entity: number.brink_flair_400_exhaust_imbalance_offset
+        name: Korekce nerovnováhy odvodu
+      - entity: number.brink_flair_400_bypass_boost_position
+        name: Poloha bypass boost
       - entity: switch.brink_flair_400_bypass_boost
         name: Bypass boost
       - entity: switch.brink_flair_400_standby

@@ -27,6 +27,8 @@ cards:
         name: Filter dirty
       - entity: sensor.brink_flair_400_current_filter_hours
         name: Filter hours used
+      - entity: sensor.brink_flair_400_operating_time
+        name: Operating time (lifetime)
       - entity: sensor.brink_flair_400_frost_status
         name: Frost status
       - entity: sensor.brink_flair_400_frost_heater_power
@@ -71,6 +73,10 @@ cards:
         name: Humidity to outside
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Temperature from outside
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: Temperature NTC2
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: Humidity RHT sensor
 
   # ── Temperature history ───────────────────────────────────────────────────────
   - type: history-graph
@@ -83,6 +89,8 @@ cards:
         name: To outside
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: From outside
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: NTC2
 
   # ── Humidity history ──────────────────────────────────────────────────────────
   - type: history-graph
@@ -93,6 +101,8 @@ cards:
         name: To inside
       - entity: sensor.brink_flair_400_humidity_to_outside
         name: To outside
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: RHT sensor
 
   # ── Ventilation mode control ──────────────────────────────────────────────────
   # Option A — requires custom:button-card (HACS)
@@ -205,6 +215,12 @@ cards:
         name: Frost minimum inlet temperature
       - entity: number.brink_flair_400_days_before_filter_warning
         name: Days before filter warning
+      - entity: number.brink_flair_400_supply_imbalance_offset
+        name: Supply imbalance offset
+      - entity: number.brink_flair_400_exhaust_imbalance_offset
+        name: Exhaust imbalance offset
+      - entity: number.brink_flair_400_bypass_boost_position
+        name: Bypass boost position
       - entity: switch.brink_flair_400_bypass_boost
         name: Bypass boost
       - entity: switch.brink_flair_400_standby
