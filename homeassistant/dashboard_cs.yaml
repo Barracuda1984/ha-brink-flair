@@ -205,6 +205,10 @@ cards:
         name: Min. teplota přívodu při mrazu
       - entity: number.brink_flair_400_days_before_filter_warning
         name: Dní do výměny filtru
+      - entity: switch.brink_flair_400_bypass_boost
+        name: Bypass boost
+      - entity: switch.brink_flair_400_standby
+        name: Pohotovostní režim
       - entity: button.brink_flair_400_filter_reset
         name: Reset filtru
       - entity: button.brink_flair_400_appliance_reset

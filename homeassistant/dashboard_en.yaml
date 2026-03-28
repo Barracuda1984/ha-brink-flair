@@ -205,6 +205,10 @@ cards:
         name: Frost minimum inlet temperature
       - entity: number.brink_flair_400_days_before_filter_warning
         name: Days before filter warning
+      - entity: switch.brink_flair_400_bypass_boost
+        name: Bypass boost
+      - entity: switch.brink_flair_400_standby
+        name: Standby
       - entity: button.brink_flair_400_filter_reset
         name: Filter reset
       - entity: button.brink_flair_400_appliance_reset
