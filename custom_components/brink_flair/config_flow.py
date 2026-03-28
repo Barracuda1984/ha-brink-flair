@@ -92,7 +92,7 @@ class BrinkFlairConfigFlow(ConfigFlow, domain=DOMAIN):
         await client.connect()
         try:
             result = await client.read_input_registers(
-                address=REG_I_ACTIVE_FUNCTION, count=1, slave=slave_id
+                address=REG_I_ACTIVE_FUNCTION, count=1, device_id=slave_id
             )
             if result.isError():
                 raise ModbusException("Device returned error response")

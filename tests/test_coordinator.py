@@ -306,7 +306,7 @@ async def test_initialize_writes_modbus_control_register(hass):
     await coord.async_initialize()
 
     client.write_register.assert_awaited_once_with(
-        address=REG_RC_MODBUS_CONTROL, value=1, slave=20
+        address=REG_RC_MODBUS_CONTROL, value=1, device_id=20
     )
 
 

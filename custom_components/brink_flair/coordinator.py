@@ -131,7 +131,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._ensure_connected()
         try:
             await self._client.write_register(
-                address=REG_RC_MODBUS_CONTROL, value=1, slave=self.slave_id
+                address=REG_RC_MODBUS_CONTROL, value=1, device_id=self.slave_id
             )
             _LOGGER.debug("Modbus control mode set to 'switch' (8000=1)")
         except ModbusException as err:
@@ -156,51 +156,51 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             # FC04 batch 1 — 4020..4024: active function, [4021 skip], ventilation mode, pressures
             b1 = await self._client.read_input_registers(
-                address=REG_I_ACTIVE_FUNCTION, count=5, slave=self.slave_id
+                address=REG_I_ACTIVE_FUNCTION, count=5, device_id=self.slave_id
             )
             # FC04 batch 2 — 4031..4037: supply setpoint, flow, [4033 skip], RPM, [4035 skip], temp, humidity
             b2 = await self._client.read_input_registers(
-                address=REG_I_SUPPLY_SETPOINT, count=7, slave=self.slave_id
+                address=REG_I_SUPPLY_SETPOINT, count=7, device_id=self.slave_id
             )
             # FC04 batch 3 — 4041..4047: exhaust setpoint, flow, [4043 skip], RPM, [4045 skip], temp, humidity
             b3 = await self._client.read_input_registers(
-                address=REG_I_EXHAUST_SETPOINT, count=7, slave=self.slave_id
+                address=REG_I_EXHAUST_SETPOINT, count=7, device_id=self.slave_id
             )
             # FC04 single reads
             b_bypass = await self._client.read_input_registers(
-                address=REG_I_BYPASS_STATUS, count=1, slave=self.slave_id
+                address=REG_I_BYPASS_STATUS, count=1, device_id=self.slave_id
             )
             b_frost = await self._client.read_input_registers(
-                address=REG_I_FROST_STATUS, count=3, slave=self.slave_id
+                address=REG_I_FROST_STATUS, count=3, device_id=self.slave_id
             )
             b_ntc = await self._client.read_input_registers(
-                address=REG_I_OUTSIDE_TEMPERATURE, count=1, slave=self.slave_id
+                address=REG_I_OUTSIDE_TEMPERATURE, count=1, device_id=self.slave_id
             )
             b_filter = await self._client.read_input_registers(
-                address=REG_I_FILTER_STATUS, count=1, slave=self.slave_id
+                address=REG_I_FILTER_STATUS, count=1, device_id=self.slave_id
             )
             b_fh = await self._client.read_input_registers(
-                address=REG_I_FILTER_HOURS, count=1, slave=self.slave_id
+                address=REG_I_FILTER_HOURS, count=1, device_id=self.slave_id
             )
             # FC03 batch — 6000..6003: flow presets 0–3
             b_presets = await self._client.read_holding_registers(
-                address=REG_H_FLOW_PRESET_0, count=4, slave=self.slave_id
+                address=REG_H_FLOW_PRESET_0, count=4, device_id=self.slave_id
             )
             # FC03 batch — 6100..6104: bypass mode, temps, hysteresis, boost
             b_bypass_cfg = await self._client.read_holding_registers(
-                address=REG_H_BYPASS_MODE, count=5, slave=self.slave_id
+                address=REG_H_BYPASS_MODE, count=5, device_id=self.slave_id
             )
             # FC03 batch — 6110..6111: frost settings
             b_frost_cfg = await self._client.read_holding_registers(
-                address=REG_H_FROST_CONTROL_TEMP, count=2, slave=self.slave_id
+                address=REG_H_FROST_CONTROL_TEMP, count=2, device_id=self.slave_id
             )
             # FC03 single — 6120: filter change days
             b_fcd = await self._client.read_holding_registers(
-                address=REG_H_FILTER_CHANGE_DAYS, count=1, slave=self.slave_id
+                address=REG_H_FILTER_CHANGE_DAYS, count=1, device_id=self.slave_id
             )
             # FC03 batch — 8000..8003: control mode, ventilation step, flow rate, standby
             b_ctrl = await self._client.read_holding_registers(
-                address=REG_RC_MODBUS_CONTROL, count=4, slave=self.slave_id
+                address=REG_RC_MODBUS_CONTROL, count=4, device_id=self.slave_id
             )
         except Exception:
             # Close on any error so the next cycle triggers a fresh reconnect.
@@ -318,7 +318,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._ensure_connected()
         try:
             await self._client.write_register(
-                address=address, value=value, slave=self.slave_id
+                address=address, value=value, device_id=self.slave_id
             )
         except Exception:
             self._client.close()
