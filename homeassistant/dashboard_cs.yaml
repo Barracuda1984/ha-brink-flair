@@ -106,7 +106,7 @@ cards:
 
   # ── Ovládání větrání ──────────────────────────────────────────────────────────
   # Varianta A — vyžaduje custom:button-card (HACS)
-  - type: vertical-stack
+    - type: vertical-stack
     cards:
       - type: markdown
         content: "## Větrací režim"
@@ -121,7 +121,10 @@ cards:
             show_state: false
             state:
               - operator: template
-                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'holiday' ]]]"
+                value: >-
+                  [[[ return
+                  states['select.brink_flair_400_ventilation_mode'].state ===
+                  'holiday' ]]]
                 color: darkcyan
             tap_action:
               action: call-service
@@ -138,7 +141,10 @@ cards:
             show_state: false
             state:
               - operator: template
-                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'low' ]]]"
+                value: >-
+                  [[[ return
+                  states['select.brink_flair_400_ventilation_mode'].state ===
+                  'low' ]]]
                 color: darkcyan
             tap_action:
               action: call-service
@@ -155,7 +161,10 @@ cards:
             show_state: false
             state:
               - operator: template
-                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'normal' ]]]"
+                value: >-
+                  [[[ return
+                  states['select.brink_flair_400_ventilation_mode'].state ===
+                  'normal' ]]]
                 color: darkcyan
             tap_action:
               action: call-service
@@ -172,7 +181,10 @@ cards:
             show_state: false
             state:
               - operator: template
-                value: "[[[ return states['select.brink_flair_400_ventilation_mode'].state === 'high' ]]]"
+                value: >-
+                  [[[ return
+                  states['select.brink_flair_400_ventilation_mode'].state ===
+                  'high' ]]]
                 color: darkcyan
             tap_action:
               action: call-service
@@ -180,6 +192,29 @@ cards:
               service_data:
                 option: high
                 entity_id: select.brink_flair_400_ventilation_mode
+          - type: custom:button-card
+            icon: mdi:fan-plus
+            name: Boost
+            styles:
+              card:
+                - height: 120px
+              icon:
+                - animation: |
+                    [[[ 
+                      return states['script.brink_boost_30min'].state === 'on' 
+                      ? 'rotating 1s linear infinite' 
+                      : 'none' 
+                    ]]]
+            show_state: false
+            state:
+              - operator: template
+                value: >-
+                  [[[ return states['script.brink_boost_30min'].state === 'on'
+                  ]]]
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: script.brink_boost_30min
 
   # Varianta B — jednoduchý select card (bez custom karet, odkomentujte pro použití místo Varianty A)
   # - type: entities
