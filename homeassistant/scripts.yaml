@@ -1,0 +1,19 @@
+alias: Brink Flair — Boost 30 min
+mode: restart
+sequence:
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.brink_pre_boost_mode
+    data:
+      option: "{{ states('select.brink_flair_400_ventilation_mode') }}"
+  - action: select.select_option
+    target:
+      entity_id: select.brink_flair_400_ventilation_mode
+    data:
+      option: high
+  - delay: "00:30:00"
+  - action: select.select_option
+    target:
+      entity_id: select.brink_flair_400_ventilation_mode
+    data:
+      option: "{{ states('input_select.brink_pre_boost_mode') }}"
