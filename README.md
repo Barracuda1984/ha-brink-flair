@@ -122,6 +122,38 @@ Ready-made Lovelace dashboards are provided in `homeassistant/` in English and C
 
 Entity IDs are auto-generated from the device name **Brink Flair 400**, so they follow the pattern `sensor.brink_flair_400_*`. If HA assigned different IDs in your instance, find the correct IDs under **Settings → Entities** and update them in the dashboard YAML.
 
+## Boost script
+
+The `homeassistant/scripts.yaml` file contains a script that temporarily switches the ventilation to **High** mode for 30 minutes and then restores the previous mode automatically. The Boost button on the dashboard triggers this script.
+
+### Prerequisites
+
+The script stores the pre-boost ventilation mode in an `input_select` helper. Create it before adding the script:
+
+1. Go to **Settings → Devices & Services → Helpers → Create helper → Dropdown**
+2. Set the following values:
+
+| Field | Value |
+|-------|-------|
+| Name | `brink_pre_boost_mode` |
+| Options | `holiday`, `low`, `normal`, `high` |
+
+The resulting entity ID must be `input_select.brink_pre_boost_mode`.
+
+### Adding the script
+
+**Via the UI:**
+
+1. Go to **Settings → Automations & Scenes → Scripts → Add Script → Create new script**
+2. Click ⋮ → **Edit in YAML**
+3. Paste the contents of `homeassistant/scripts.yaml` and save
+
+**Via `scripts.yaml`:**
+
+If your HA instance uses a `scripts.yaml` file, append the contents of `homeassistant/scripts.yaml` to it and restart Home Assistant.
+
+> The script uses `mode: restart` — pressing Boost while it is already running resets the 30-minute timer.
+
 ## Development
 
 ### Virtual environment

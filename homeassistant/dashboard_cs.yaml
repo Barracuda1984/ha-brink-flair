@@ -104,6 +104,33 @@ cards:
       - entity: sensor.brink_flair_400_humidity_rht_sensor
         name: Snímač RHT
 
+  # ── Senzory CO2 ───────────────────────────────────────────────────────────────
+  - type: entities
+    title: CO2
+    show_header_toggle: false
+    entities:
+      - entity: sensor.brink_flair_400_co2_sensor_1
+        name: Senzor CO2 1
+      - entity: sensor.brink_flair_400_co2_sensor_2
+        name: Senzor CO2 2
+      - entity: sensor.brink_flair_400_co2_sensor_3
+        name: Senzor CO2 3
+      - entity: sensor.brink_flair_400_co2_sensor_4
+        name: Senzor CO2 4
+
+  - type: history-graph
+    title: CO2 (24 h)
+    hours_to_show: 24
+    entities:
+      - entity: sensor.brink_flair_400_co2_sensor_1
+        name: Senzor 1
+      - entity: sensor.brink_flair_400_co2_sensor_2
+        name: Senzor 2
+      - entity: sensor.brink_flair_400_co2_sensor_3
+        name: Senzor 3
+      - entity: sensor.brink_flair_400_co2_sensor_4
+        name: Senzor 4
+
   # ── Ovládání větrání ──────────────────────────────────────────────────────────
   # Varianta A — vyžaduje custom:button-card (HACS)
     - type: vertical-stack

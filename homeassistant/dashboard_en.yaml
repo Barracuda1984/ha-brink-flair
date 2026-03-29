@@ -104,6 +104,33 @@ cards:
       - entity: sensor.brink_flair_400_humidity_rht_sensor
         name: RHT sensor
 
+  # ── CO2 sensors ──────────────────────────────────────────────────────────────
+  - type: entities
+    title: CO2
+    show_header_toggle: false
+    entities:
+      - entity: sensor.brink_flair_400_co2_sensor_1
+        name: CO2 Sensor 1
+      - entity: sensor.brink_flair_400_co2_sensor_2
+        name: CO2 Sensor 2
+      - entity: sensor.brink_flair_400_co2_sensor_3
+        name: CO2 Sensor 3
+      - entity: sensor.brink_flair_400_co2_sensor_4
+        name: CO2 Sensor 4
+
+  - type: history-graph
+    title: CO2 (24 h)
+    hours_to_show: 24
+    entities:
+      - entity: sensor.brink_flair_400_co2_sensor_1
+        name: Sensor 1
+      - entity: sensor.brink_flair_400_co2_sensor_2
+        name: Sensor 2
+      - entity: sensor.brink_flair_400_co2_sensor_3
+        name: Sensor 3
+      - entity: sensor.brink_flair_400_co2_sensor_4
+        name: Sensor 4
+
   # ── Ventilation mode control ──────────────────────────────────────────────────
   # Option A — requires custom:button-card (HACS)
   - type: vertical-stack
@@ -180,6 +207,29 @@ cards:
               service_data:
                 option: high
                 entity_id: select.brink_flair_400_ventilation_mode
+          - type: custom:button-card
+            icon: mdi:fan-plus
+            name: Boost
+            styles:
+              card:
+                - height: 120px
+              icon:
+                - animation: |
+                    [[[
+                      return states['script.brink_boost_30min'].state === 'on'
+                      ? 'rotating 1s linear infinite'
+                      : 'none'
+                    ]]]
+            show_state: false
+            state:
+              - operator: template
+                value: >-
+                  [[[ return states['script.brink_boost_30min'].state === 'on'
+                  ]]]
+                color: darkcyan
+            tap_action:
+              action: call-service
+              service: script.brink_boost_30min
 
   # Option B — simple select card (no custom cards needed, uncomment to use instead of Option A)
   # - type: entities
