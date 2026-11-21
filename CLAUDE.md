@@ -64,7 +64,7 @@ Follows the standard HA `DataUpdateCoordinator` pattern:
 ```
 custom_components/brink_flair/
   __init__.py        # entry setup/unload — calls async_initialize() before first refresh
-  manifest.json      # requires pymodbus==3.11.2
+  manifest.json      # requires pymodbus>=3.10.0,<4 (range, not a pin — HA core constrains pymodbus)
   config_flow.py     # UI wizard: serial port, baud rate, slave ID (default 20)
   const.py           # all register addresses, value maps, framing constants
   coordinator.py     # DataUpdateCoordinator — batched polling + write helpers

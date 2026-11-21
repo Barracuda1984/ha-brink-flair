@@ -2,12 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.4] — Unreleased
+## [0.1.4] — 2026-11-21
 
 ### Added
 - Boost script (`homeassistant/scripts.yaml`) — switches ventilation to High for 30 minutes then restores the previous mode
 - Boost button added to the ventilation section of both dashboards (EN and CS)
 - CO2 sensors (PPM values) added to both dashboards — entities card and 24 h history graph
+
+### Fixed
+- Setup failure on HA 2026.11 (`Requirements for brink_flair not found: ['pymodbus==3.11.2']`): requirement relaxed to `pymodbus>=3.10.0,<4` so it no longer conflicts with the pymodbus version pinned by HA core
 
 ### Docs
 - README: new *Boost script* section covering helper setup and installation steps

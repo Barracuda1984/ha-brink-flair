@@ -167,7 +167,7 @@ source venv/bin/activate
 # Windows
 venv\Scripts\activate
 
-pip install homeassistant pymodbus==3.11.2
+pip install homeassistant "pymodbus>=3.10.0,<4"
 ```
 
 To run HA with this integration loaded:
