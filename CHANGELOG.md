@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Translated states (English, Czech) for the status sensors — Status, Ventilation Mode, Bypass Status, Frost Status and CO2 sensor status — and for the Ventilation Mode and Bypass Mode selects. The UI now shows e.g. "Auto (Modbus)" / "Bez mrazu" instead of `auto_modbus` / `no_frost`. Entity states stay the same raw keys, so automations and dashboards keep working.
 
+### Fixed
+- Optional sensors that are not fitted no longer report bogus values: NTC2 (999.9 °C) and the NTC1 outside sensor when disconnected or out of range, RHT humidity (0 %), and CO2 sensors that are not initialized or in error (0 ppm) now show as *unknown*
+- Czech dashboard (`homeassistant/dashboard_cs.yaml`) was invalid YAML — the ventilation mode block was indented one level too deep
+
+### Changed
+- Example dashboards no longer show NTC2 and RHT humidity (optional sensors, not fitted on most units)
+
 ### Docs
 - README: credits to [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus)
 
