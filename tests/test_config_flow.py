@@ -82,7 +82,7 @@ async def test_successful_setup_creates_entry(hass):
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Brink Flair 400 (/dev/ttyUSB0)"
+    assert result["title"] == "Brink Flair (/dev/ttyUSB0)"
     assert result["data"] == ENTRY_DATA
     client.close.assert_called_once()
 

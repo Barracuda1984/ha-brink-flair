@@ -68,7 +68,7 @@ class BrinkFlairConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"Brink Flair 400 ({user_input[CONF_SERIAL_PORT]})",
+                    title=f"Brink Flair ({user_input[CONF_SERIAL_PORT]})",
                     data=user_input,
                 )
 

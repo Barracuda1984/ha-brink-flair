@@ -88,7 +88,7 @@ async def async_setup_entry(
 class BrinkFlairSelectEntity(
     CoordinatorEntity[BrinkFlairCoordinator], SelectEntity
 ):
-    """Represents a selectable setting on the Brink Flair 400."""
+    """Represents a selectable setting on a Brink Flair unit."""
 
     entity_description: BrinkFlairSelectEntityDescription
     _attr_has_entity_name = True
