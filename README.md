@@ -141,11 +141,11 @@ Or manually:
 | Exhaust Pressure | Pa | Duct pressure exhaust side (register 4024) |
 | Frost Heater Power | % | Pre-heater output (register 4071) |
 | Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) |
-| Temperature NTC2 | °C | Second NTC temperature sensor (register 4082) |
-| Humidity RHT Sensor | % | Standalone humidity sensor (register 4083) |
+| Temperature NTC2 | °C | Second NTC temperature sensor, optional — unknown when not fitted (register 4082) |
+| Humidity RHT Sensor | % | Standalone humidity sensor, optional — unknown when not fitted (register 4083) |
 | Operating Time | h | Lifetime operating hours (registers 4113–4114) |
 | Current Filter Hours | h | Hours since last filter reset (register 4115) |
-| CO2 Sensor 1–4 | ppm | CO2 concentration (registers 4201, 4203, 4205, 4207) |
+| CO2 Sensor 1–4 | ppm | CO2 concentration, optional — unknown when the sensor is not fitted (registers 4201, 4203, 4205, 4207) |
 | CO2 Sensor 1–4 Status | — | CO2 sensor state (registers 4200, 4202, 4204, 4206) |
 | Status | — | Active function text (register 4020) |
 | Ventilation Mode | — | Current operational mode (register 4022) |
