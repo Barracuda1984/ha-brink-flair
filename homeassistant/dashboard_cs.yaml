@@ -73,10 +73,6 @@ cards:
         name: Vlhkost do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Teplota z exteriéru
-      - entity: sensor.brink_flair_400_temperature_ntc2
-        name: Teplota NTC2
-      - entity: sensor.brink_flair_400_humidity_rht_sensor
-        name: Vlhkost snímač RHT
 
   # ── Historie teplot ───────────────────────────────────────────────────────────
   - type: history-graph
@@ -89,8 +85,6 @@ cards:
         name: Do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Z exteriéru
-      - entity: sensor.brink_flair_400_temperature_ntc2
-        name: NTC2
 
   # ── Historie vlhkosti ─────────────────────────────────────────────────────────
   - type: history-graph
@@ -101,8 +95,6 @@ cards:
         name: Do interiéru
       - entity: sensor.brink_flair_400_humidity_to_outside
         name: Do exteriéru
-      - entity: sensor.brink_flair_400_humidity_rht_sensor
-        name: Snímač RHT
 
   # ── Senzory CO2 ───────────────────────────────────────────────────────────────
   - type: entities
@@ -133,7 +125,7 @@ cards:
 
   # ── Ovládání větrání ──────────────────────────────────────────────────────────
   # Varianta A — vyžaduje custom:button-card (HACS)
-    - type: vertical-stack
+  - type: vertical-stack
     cards:
       - type: markdown
         content: "## Větrací režim"
