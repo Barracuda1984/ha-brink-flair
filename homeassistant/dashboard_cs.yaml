@@ -73,6 +73,25 @@ cards:
         name: Vlhkost do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Teplota z exteriéru
+      # Volitelná čidla — řádek se zobrazí jen tehdy, když je čidlo osazené
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_temperature_ntc2
+            state_not: unknown
+          - entity: sensor.brink_flair_400_temperature_ntc2
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_temperature_ntc2
+          name: Teplota NTC2
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_humidity_rht_sensor
+            state_not: unknown
+          - entity: sensor.brink_flair_400_humidity_rht_sensor
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_humidity_rht_sensor
+          name: Vlhkost snímač RHT
 
   # ── Historie teplot ───────────────────────────────────────────────────────────
   - type: history-graph
@@ -85,6 +104,8 @@ cards:
         name: Do exteriéru
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Z exteriéru
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: NTC2
 
   # ── Historie vlhkosti ─────────────────────────────────────────────────────────
   - type: history-graph
@@ -95,20 +116,51 @@ cards:
         name: Do interiéru
       - entity: sensor.brink_flair_400_humidity_to_outside
         name: Do exteriéru
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: Snímač RHT
 
   # ── Senzory CO2 ───────────────────────────────────────────────────────────────
   - type: entities
     title: CO2
     show_header_toggle: false
     entities:
-      - entity: sensor.brink_flair_400_co2_sensor_1
-        name: Senzor CO2 1
-      - entity: sensor.brink_flair_400_co2_sensor_2
-        name: Senzor CO2 2
-      - entity: sensor.brink_flair_400_co2_sensor_3
-        name: Senzor CO2 3
-      - entity: sensor.brink_flair_400_co2_sensor_4
-        name: Senzor CO2 4
+      # Volitelná čidla — řádek se zobrazí jen tehdy, když je čidlo osazené
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_1
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_1
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_1
+          name: Senzor CO2 1
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_2
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_2
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_2
+          name: Senzor CO2 2
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_3
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_3
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_3
+          name: Senzor CO2 3
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_4
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_4
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_4
+          name: Senzor CO2 4
 
   - type: history-graph
     title: CO2 (24 h)

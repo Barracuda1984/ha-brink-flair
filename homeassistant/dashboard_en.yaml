@@ -73,6 +73,25 @@ cards:
         name: Humidity to outside
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: Temperature from outside
+      # Optional sensors — the row is shown only when the sensor is fitted
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_temperature_ntc2
+            state_not: unknown
+          - entity: sensor.brink_flair_400_temperature_ntc2
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_temperature_ntc2
+          name: Temperature NTC2
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_humidity_rht_sensor
+            state_not: unknown
+          - entity: sensor.brink_flair_400_humidity_rht_sensor
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_humidity_rht_sensor
+          name: Humidity RHT sensor
 
   # ── Temperature history ───────────────────────────────────────────────────────
   - type: history-graph
@@ -85,6 +104,8 @@ cards:
         name: To outside
       - entity: sensor.brink_flair_400_temperature_from_outside
         name: From outside
+      - entity: sensor.brink_flair_400_temperature_ntc2
+        name: NTC2
 
   # ── Humidity history ──────────────────────────────────────────────────────────
   - type: history-graph
@@ -95,20 +116,51 @@ cards:
         name: To inside
       - entity: sensor.brink_flair_400_humidity_to_outside
         name: To outside
+      - entity: sensor.brink_flair_400_humidity_rht_sensor
+        name: RHT sensor
 
   # ── CO2 sensors ──────────────────────────────────────────────────────────────
   - type: entities
     title: CO2
     show_header_toggle: false
     entities:
-      - entity: sensor.brink_flair_400_co2_sensor_1
-        name: CO2 Sensor 1
-      - entity: sensor.brink_flair_400_co2_sensor_2
-        name: CO2 Sensor 2
-      - entity: sensor.brink_flair_400_co2_sensor_3
-        name: CO2 Sensor 3
-      - entity: sensor.brink_flair_400_co2_sensor_4
-        name: CO2 Sensor 4
+      # Optional sensors — the row is shown only when the sensor is fitted
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_1
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_1
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_1
+          name: CO2 Sensor 1
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_2
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_2
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_2
+          name: CO2 Sensor 2
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_3
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_3
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_3
+          name: CO2 Sensor 3
+      - type: conditional
+        conditions:
+          - entity: sensor.brink_flair_400_co2_sensor_4
+            state_not: unknown
+          - entity: sensor.brink_flair_400_co2_sensor_4
+            state_not: unavailable
+        row:
+          entity: sensor.brink_flair_400_co2_sensor_4
+          name: CO2 Sensor 4
 
   - type: history-graph
     title: CO2 (24 h)
