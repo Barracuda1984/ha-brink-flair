@@ -2,13 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.0] — 2026-11-26
+
+First stable release. No changes to entities or Modbus behaviour compared to 0.1.4 — existing installations update without reconfiguration.
+
+### ⚠️ Breaking
+- Minimum Home Assistant version is now **2025.9.0** (first release shipping pymodbus ≥ 3.10, which the integration already required)
 
 ### Added
 - Brand icons and logos (light and dark) bundled in `custom_components/brink_flair/brand/`
 
 ### Changed
-- Minimum Home Assistant version raised to **2025.9.0** (first release shipping pymodbus ≥ 3.10, matching the integration's requirement)
 - `manifest.json`: codeowner set to `@Barracuda1984`, documentation links to the README, keys sorted per hassfest
 - `hacs.json`: removed obsolete `render_readme` option
 
@@ -17,6 +21,10 @@ All notable changes to this project will be documented in this file.
 - New tests for 32-bit operating time, signed imbalance offsets, CO2 registers, device version decoding and all write helpers (coverage 97 %)
 - `pyserial` added to `requirements_test.txt`
 - CI: new GitHub Actions workflow with HACS, hassfest and test jobs
+
+### Docs
+- README: badges, My Home Assistant buttons, compatibility table, hardware and wiring guide (tested adapter, A/B/GND wiring), complete entity tables
+- New `CONTRIBUTING.md` and GitHub issue forms (bug report, working model report)
 
 ---
 
