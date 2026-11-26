@@ -1,0 +1,87 @@
+name: Working model report
+description: Report whether the integration works with your Brink unit — helps build the compatibility table
+title: "[Model report] "
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The integration is developed and tested on a **Flair 400** only. Reports from other models (working or not) are very welcome and will be added to the compatibility table in the README.
+  - type: dropdown
+    id: model
+    attributes:
+      label: Brink model
+      options:
+        - Flair 225
+        - Flair 325
+        - Flair 400
+        - Flair 600
+        - Other (specify below)
+    validations:
+      required: true
+  - type: input
+    id: model_other
+    attributes:
+      label: Exact model / variant
+      description: As shown on the type plate or in the unit menu (e.g. "Flair 325 Plus 4/0 R")
+  - type: dropdown
+    id: board
+    attributes:
+      label: Control board
+      options:
+        - Standard — UWA2-B (connector X15)
+        - Plus — UWA2-E (connector X06)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Hardware / software version
+      description: From the HA device page (Settings → Devices → Brink Flair) or the unit menu
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: "0.1.4"
+    validations:
+      required: true
+  - type: input
+    id: adapter
+    attributes:
+      label: RS-485 adapter
+      description: Brand/model or chipset
+  - type: dropdown
+    id: overall
+    attributes:
+      label: Overall result
+      options:
+        - Works fully
+        - Works partially
+        - Does not work
+    validations:
+      required: true
+  - type: checkboxes
+    id: features
+    attributes:
+      label: What works?
+      description: Tick everything you verified
+      options:
+        - label: Temperatures, flows and fan RPM
+        - label: Ventilation mode control
+        - label: Bypass status and bypass mode setting
+        - label: Frost protection status
+        - label: Filter status and filter reset
+        - label: Humidity / pressure sensors
+        - label: CO2 sensors
+        - label: Number settings (flow presets, bypass/frost temperatures)
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: What did not work, entities showing wrong or unknown values, anything specific to your model.
+  - type: textarea
+    id: photos
+    attributes:
+      label: Wiring photos
+      description: Optional — photos of the connector and adapter wiring help other users (drag & drop images here).

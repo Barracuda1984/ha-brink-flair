@@ -1,0 +1,100 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please fill in as much as you can — Modbus problems are hard to debug without details.
+        For general questions use [Discussions](https://github.com/Barracuda1984/ha-brink-flair/discussions) instead.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Change ventilation mode to ...
+        3. See error
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: "0.1.4"
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: Settings → About
+      placeholder: "2026.11.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation type
+      options:
+        - Home Assistant OS
+        - Home Assistant Container
+        - Home Assistant Supervised
+        - Home Assistant Core
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: Brink Flair model
+      options:
+        - Flair 225
+        - Flair 325
+        - Flair 400
+        - Flair 600
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: board
+    attributes:
+      label: Control board
+      options:
+        - Standard — UWA2-B (connector X15)
+        - Plus — UWA2-E (connector X06)
+        - Not sure
+  - type: input
+    id: adapter
+    attributes:
+      label: RS-485 adapter
+      description: Brand/model or chipset (e.g. FTDI, CH340, Waveshare USB-to-RS485)
+  - type: input
+    id: settings
+    attributes:
+      label: Modbus settings
+      description: Slave address and baud rate configured on the unit and in HA
+      placeholder: "slave 20, 19200 baud"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Enable debug logging in `configuration.yaml`, restart HA, reproduce the problem and paste the relevant lines:
+        ```yaml
+        logger:
+          default: warning
+          logs:
+            custom_components.brink_flair: debug
+            pymodbus: debug
+        ```
+      render: text
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, diagnostics, anything else that might help.
