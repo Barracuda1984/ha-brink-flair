@@ -1,14 +1,78 @@
 # Brink Flair — Home Assistant Custom Integration
 
-Custom integration for the **Brink Flair 400** (and other Flair models) communicating directly with Home Assistant via **Modbus RTU over RS-485** — no ESP board required.
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![GitHub Release](https://img.shields.io/github/v/release/Barracuda1984/ha-brink-flair)](https://github.com/Barracuda1984/ha-brink-flair/releases)
+[![Validate](https://github.com/Barracuda1984/ha-brink-flair/actions/workflows/validate.yml/badge.svg)](https://github.com/Barracuda1984/ha-brink-flair/actions/workflows/validate.yml)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.9%2B-41BDF5.svg)](https://www.home-assistant.io/)
+[![License](https://img.shields.io/github/license/Barracuda1984/ha-brink-flair)](LICENSE)
+
+Control and monitor your **Brink Flair** heat-recovery ventilation unit from Home Assistant — directly over **Modbus RTU (RS-485)**, no ESP board, cloud or Brink gateway required.
+
+- 📊 Temperatures, humidity, air flows, fan speeds, duct pressures, CO2 and filter status
+- 🎛️ Ventilation mode, bypass mode, flow presets, bypass and frost-protection settings
+- 🧹 Filter reset button and filter-dirty alert
+- 🏠 Ready-made dashboards (EN/CS) and a Boost script
+
+<!-- TODO: dashboard screenshot
+![Dashboard](docs/images/dashboard.png)
+-->
+
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Barracuda1984&repository=ha-brink-flair&category=integration)
+
+## Compatibility
+
+The integration is developed and tested on a **Flair 400**. Other Flair units use the same control board (UWA2-B / UWA2-E) and the same Modbus register map, so they are expected to work, but nobody has confirmed it yet.
+
+| Model | Control board | Status | Reported by |
+|-------|---------------|--------|-------------|
+| Flair 400 | UWA2-B (X15) | ✅ Tested | [@Barracuda1984](https://github.com/Barracuda1984) |
+| Flair 225 | UWA2-B / UWA2-E | ❓ Untested | — |
+| Flair 325 | UWA2-B / UWA2-E | ❓ Untested | — |
+| Flair 600 | UWA2-B / UWA2-E | ❓ Untested | — |
+
+Tested environment: Home Assistant OS 18.4, Core 2026.11.2, Supervisor 2026.11.0, integration 0.1.4.
+
+**Have a different model?** Please file a [working model report](https://github.com/Barracuda1984/ha-brink-flair/issues/new?template=working_model.yml) — whether it works or not — and it will be added to this table.
 
 ## Requirements
 
-- RS-485 to USB adapter (or RS-485 hat) wired to the Brink Flair Modbus connector
-  - Standard model: connector **X15** on PCB UWA2-B
-  - Plus model: connector **X06** on Plus PCB UWA2-E
-- Serial framing is fixed at **8E1** (8 data bits, even parity, 1 stop bit)
-- Home Assistant 2025.9.0 or newer (first release shipping pymodbus ≥ 3.10)
+- Home Assistant **2025.9.0** or newer (first release shipping pymodbus ≥ 3.10)
+- An RS-485 adapter connected to the Home Assistant host (see [Hardware and wiring](#hardware-and-wiring))
+- Modbus enabled on the Brink unit (see [Device configuration](#device-configuration))
+
+## Hardware and wiring
+
+### What you need
+
+- **RS-485 adapter** — any RS-485 adapter that shows up as a serial port on the Home Assistant host works: a USB-to-RS485 dongle (FTDI, CH340, CP210x, …) or an RS-485 HAT for a Raspberry Pi. The integration uses plain Modbus RTU and needs no adapter-specific driver.
+  - Example used on the Flair 400: [PremiumCord USB 2.0 – RS-485](https://www.alza.cz/premiumcord-usb-2-0-rs-485-d250866.htm) converter (**FTDI FT232R** chip).
+    Its RS-485 side is a D-Sub DE-9 connector; a small DE-9 breakout board turns it into a screw terminal with **A**, **B** and **GND** (plus one unused terminal). Only A, B and GND are wired to the unit.
+  - Tip: select the stable path under `/dev/serial/by-id/` (e.g. `/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_…-if00-port0`) instead of `/dev/ttyUSB0`, so the port does not change after a reboot.
+- **Cable** — a twisted pair (e.g. one pair of a CAT5/CAT6 cable) for the A/B data lines; keep it away from mains wiring
+
+### Where to connect
+
+| Unit version | Board | Modbus connector | Terminator |
+|--------------|-------|------------------|------------|
+| Standard | UWA2-B | **X15** | resistor X12 on UWA2-B |
+| Plus | UWA2-E (Plus board) | **X06** | resistor X07 on UWA2-E |
+
+> ⚠️ **Always unplug the unit from the mains before opening it.**
+
+- Connect adapter **A** to **A**, **B** to **B** and **GND** to **GND** on the Modbus connector — these three wires are all you need. If the readings stay empty, swap A and B — labelling differs between adapter manufacturers.
+- With a single unit on a short cable, leave the terminator resistor fitted. Remove it only if the unit is not at the end of the bus.
+- On a Plus unit, jumpers X12, X121 and X122 must stay fitted on the UWA2-B board.
+- Cascaded units must be connected through the master appliance with the Plus board UWA2-E.
+
+Source: Brink *Modbus UWA2-B/UWA2-E installation regulations* (614882), available on the [Brink website](https://www.brinkclimatesystems.com).
+
+<!-- TODO: wiring photos
+| Connector X15 on UWA2-B | Adapter wiring |
+|---|---|
+| ![X15](docs/images/wiring-x15.jpg) | ![Adapter](docs/images/wiring-adapter.jpg) |
+-->
+
+Serial framing is fixed at **8E1** (8 data bits, even parity, 1 stop bit).
 
 ## Device configuration
 
@@ -25,15 +89,25 @@ On the Brink Flair touchscreen set:
 
 ### HACS (recommended)
 
-1. Open HACS → Integrations → ⋮ → Custom repositories
-2. Add this repository URL and select category **Integration**
-3. Search for **Brink Flair** and install
+Click the button to open the repository in HACS, then **Download** and restart Home Assistant:
+
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Barracuda1984&repository=ha-brink-flair&category=integration)
+
+Or add it manually:
+
+1. Open HACS → ⋮ → **Custom repositories**
+2. Add `https://github.com/Barracuda1984/ha-brink-flair` with type **Integration**
+3. Search for **Brink Flair**, download it and restart Home Assistant
 
 ### Manual
 
 Copy `custom_components/brink_flair/` into your Home Assistant `config/custom_components/` directory and restart.
 
 ## Configuration
+
+[![Open your Home Assistant instance and start setting up Brink Flair.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=brink_flair)
+
+Or manually:
 
 1. Go to **Settings → Devices & Services → Add Integration**
 2. Search for **Brink Flair**
@@ -67,7 +141,12 @@ Copy `custom_components/brink_flair/` into your Home Assistant `config/custom_co
 | Exhaust Pressure | Pa | Duct pressure exhaust side (register 4024) |
 | Frost Heater Power | % | Pre-heater output (register 4071) |
 | Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) |
+| Temperature NTC2 | °C | Second NTC temperature sensor (register 4082) |
+| Humidity RHT Sensor | % | Standalone humidity sensor (register 4083) |
+| Operating Time | h | Lifetime operating hours (registers 4113–4114) |
 | Current Filter Hours | h | Hours since last filter reset (register 4115) |
+| CO2 Sensor 1–4 | ppm | CO2 concentration (registers 4201, 4203, 4205, 4207) |
+| CO2 Sensor 1–4 Status | — | CO2 sensor state (registers 4200, 4202, 4204, 4206) |
 | Status | — | Active function text (register 4020) |
 | Ventilation Mode | — | Current operational mode (register 4022) |
 | Bypass Status | — | Bypass valve state (register 4050) |
@@ -84,6 +163,13 @@ Copy `custom_components/brink_flair/` into your Home Assistant `config/custom_co
 | Ventilation Mode | holiday / low / normal / high | Sets register 8001 |
 | Bypass Mode | auto / closed / open | Sets register 6100 |
 
+### Switch
+| Entity | Description |
+|--------|-------------|
+| Standby | Puts the unit into standby (register 8003) |
+| Bypass Boost | Bypass boost on/off (register 6104) |
+| CO2 Control Mode | CO2-controlled ventilation on/off (register 6150) |
+
 ### Number (sliders)
 | Entity | Range | Description |
 |--------|-------|-------------|
@@ -97,6 +183,10 @@ Copy `custom_components/brink_flair/` into your Home Assistant `config/custom_co
 | Frost Control Temperature | 0–3 °C | Register 6110 |
 | Frost Minimum Inlet Temperature | 7–22 °C | Register 6111 |
 | Days Before Filter Warning | 1–365 d | Register 6120 |
+| Supply Imbalance Offset | −15–15 % | Register 6035 |
+| Exhaust Imbalance Offset | −15–15 % | Register 6036 |
+| Bypass Boost Position | 0–3 | Ventilation step used during bypass boost (register 6105) |
+| CO2 Sensor 1–4 Low / High Level | 400–2000 ppm | CO2 thresholds (registers 6151–6158) |
 
 ### Buttons
 | Entity | Description |
