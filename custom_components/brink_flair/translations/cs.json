@@ -22,5 +22,95 @@
     "abort": {
       "already_configured": "Toto zařízení je již nakonfigurováno"
     }
+  },
+  "entity": {
+    "sensor": {
+      "active_function": {
+        "state": {
+          "standby": "Pohotovost",
+          "bootloader": "Bootloader",
+          "non_blocking_error": "Neblokující chyba",
+          "blocking_error": "Blokující chyba",
+          "manual": "Ruční",
+          "holiday": "Dovolená",
+          "night_ventilation": "Noční větrání",
+          "party": "Párty",
+          "bypass_boost": "Bypass boost",
+          "normal_boost": "Boost",
+          "auto_co2": "Auto (CO2)",
+          "auto_ebus": "Auto (eBus)",
+          "auto_modbus": "Auto (Modbus)",
+          "auto_lan_portal": "Auto (LAN/WLAN portál)",
+          "auto_lan_local": "Auto (LAN/WLAN lokálně)"
+        }
+      },
+      "ventilation_mode": {
+        "state": {
+          "holiday": "Dovolená",
+          "low": "Nízký",
+          "normal": "Normální",
+          "high": "Vysoký",
+          "auto": "Auto"
+        }
+      },
+      "bypass_status": {
+        "state": {
+          "initialize": "Inicializace",
+          "opening": "Otevírá se",
+          "closing": "Zavírá se",
+          "open": "Otevřený",
+          "closed": "Zavřený"
+        }
+      },
+      "frost_status": {
+        "state": {
+          "initialize": "Inicializace",
+          "power_up_delay": "Prodleva po zapnutí",
+          "no_frost": "Bez mrazu",
+          "no_frost_delay": "Bez mrazu (prodleva)",
+          "frost_control_start_delay": "Prodleva spuštění ochrany",
+          "wait_for_icing": "Čekání na námrazu",
+          "ice_detected_delay": "Zjištěna námraza (prodleva)",
+          "heating": "Předehřev",
+          "wait_for_free_heater": "Čekání na předehřívač",
+          "fan_control_start_delay": "Prodleva regulace ventilátoru",
+          "fan_control_wait_delay": "Čekání regulace ventilátoru",
+          "fan_control": "Regulace ventilátoru",
+          "fan_off_delay": "Prodleva vypnutí ventilátoru",
+          "fan_off": "Ventilátor vypnut",
+          "fan_restarting": "Restart ventilátoru",
+          "error": "Chyba",
+          "test_mode": "Testovací režim"
+        }
+      },
+      "co2_status": {
+        "state": {
+          "error": "Chyba",
+          "not_initialized": "Neinicializováno",
+          "idle": "Nečinný",
+          "warming_up": "Zahřívání",
+          "running": "V provozu",
+          "calibrating": "Kalibrace",
+          "self_test": "Autotest"
+        }
+      }
+    },
+    "select": {
+      "ventilation_step": {
+        "state": {
+          "holiday": "Dovolená",
+          "low": "Nízký",
+          "normal": "Normální",
+          "high": "Vysoký"
+        }
+      },
+      "bypass_mode": {
+        "state": {
+          "auto": "Auto",
+          "closed": "Zavřený",
+          "open": "Otevřený"
+        }
+      }
+    }
   }
 }
