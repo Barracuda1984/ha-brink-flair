@@ -89,8 +89,53 @@ COORDINATOR_DATA: dict[str, Any] = {
 
 
 # ---------------------------------------------------------------------------
-# Mock Modbus client fixture
+# Custom integrations must be explicitly enabled in pytest-homeassistant
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
+    """Allow Home Assistant to load custom_components/brink_flair in every test."""
+
+
+# ---------------------------------------------------------------------------
+# Fake Modbus device — answers reads by register address, not call order
+# ---------------------------------------------------------------------------
+
+# Raw FC04 input-register values (as the device would return them)
+DEFAULT_INPUT_REGISTERS: dict[int, int] = {
+    # 4000..4012: version / serial (read once in async_initialize)
+    4000: 0x5301, 4001: 0x0103, 4002: 1, 4003: 0x0101,
+    4010: 0x1234, 4011: 0x5678, 4012: 0x9012,
+    # 4020..4024: active function, fan control type, ventilation mode, pressures
+    4020: 12, 4021: 0, 4022: 2, 4023: 125, 4024: 65525,   # exhaust 65525 → -11 Pa
+    # 4031..4037: supply setpoint, flow, mass flow, rpm, status, temp, humidity
+    4031: 200, 4032: 198, 4033: 0, 4034: 1450, 4035: 0, 4036: 223, 4037: 45,
+    # 4041..4047: exhaust setpoint, flow, mass flow, rpm, status, temp, humidity
+    4041: 200, 4042: 195, 4043: 0, 4044: 1420, 4045: 0, 4046: 201, 4047: 50,
+    4050: 4,                                  # bypass closed
+    4070: 2, 4071: 0, 4072: 0,                # no frost, heater 0 %, reduction 0 %
+    4081: 85, 4082: 86, 4083: 45,             # NTC1 8.5 °C, NTC2 8.6 °C, RHT 45 %
+    4100: 0,                                  # filter not dirty
+    4113: 0, 4114: 720,                       # operating time 720 h (32-bit)
+    4115: 720,                                # filter hours
+    # 4200..4207: CO2 sensors 1–4 (status, value)
+    4200: 0, 4201: 0, 4202: 0, 4203: 0, 4204: 0, 4205: 0, 4206: 0, 4207: 0,
+}
+
+# Raw FC03 holding-register values
+DEFAULT_HOLDING_REGISTERS: dict[int, int] = {
+    6000: 75, 6001: 150, 6002: 200, 6003: 300,          # flow presets
+    6035: 0, 6036: 0,                                   # imbalance offsets
+    6100: 0, 6101: 240, 6102: 120, 6103: 20,            # bypass auto, 24 °C, 12 °C, 2 °C
+    6104: 0, 6105: 2,                                   # bypass boost off, position 2
+    6110: 10, 6111: 150,                                # frost 1.0 °C, 15.0 °C
+    6120: 180,                                          # filter change days
+    6150: 0,                                            # CO2 mode off
+    6151: 400, 6152: 1000, 6153: 400, 6154: 1000,       # CO2 thresholds
+    6155: 400, 6156: 1000, 6157: 400, 6158: 1000,
+    8000: 1, 8001: 2, 8002: 200, 8003: 0,               # modbus switch, normal, 200, not standby
+}
 
 
 def _make_register_result(*values: int) -> MagicMock:
@@ -101,54 +146,57 @@ def _make_register_result(*values: int) -> MagicMock:
     return result
 
 
+def make_fake_client(
+    input_overrides: dict[int, int] | None = None,
+    holding_overrides: dict[int, int] | None = None,
+    client: MagicMock | None = None,
+) -> MagicMock:
+    """Build (or configure) a mock AsyncModbusSerialClient backed by register maps.
+
+    Reads return the registers at the requested address range, so tests are
+    independent of how the coordinator batches its reads. Unknown addresses
+    read as 0. Writes update the holding-register map.
+    """
+    inputs = {**DEFAULT_INPUT_REGISTERS, **(input_overrides or {})}
+    holding = {**DEFAULT_HOLDING_REGISTERS, **(holding_overrides or {})}
+    client = client if client is not None else MagicMock()
+    client.connected = False
+
+    async def fake_connect() -> bool:
+        client.connected = True
+        return True
+
+    def fake_close() -> None:
+        client.connected = False
+
+    async def read_input(address: int, count: int = 1, **_: Any) -> MagicMock:
+        return _make_register_result(*(inputs.get(a, 0) for a in range(address, address + count)))
+
+    async def read_holding(address: int, count: int = 1, **_: Any) -> MagicMock:
+        return _make_register_result(*(holding.get(a, 0) for a in range(address, address + count)))
+
+    async def write(address: int, value: int, **_: Any) -> MagicMock:
+        holding[address] = value
+        return MagicMock(isError=lambda: False)
+
+    client.connect = AsyncMock(side_effect=fake_connect)
+    client.close = MagicMock(side_effect=fake_close)
+    client.read_input_registers = AsyncMock(side_effect=read_input)
+    client.read_holding_registers = AsyncMock(side_effect=read_holding)
+    client.write_register = AsyncMock(side_effect=write)
+    client.input_registers = inputs
+    client.holding_registers = holding
+    return client
+
+
 @pytest.fixture
 def mock_modbus_client() -> Generator[MagicMock, None, None]:
-    """Patch AsyncModbusSerialClient throughout the integration."""
+    """Patch AsyncModbusSerialClient throughout the integration with a fake device."""
     with patch(
         "custom_components.brink_flair.coordinator.AsyncModbusSerialClient",
         autospec=True,
     ) as mock_cls:
-        client = mock_cls.return_value
-        client.connected = False
-
-        async def fake_connect() -> None:
-            client.connected = True
-
-        client.connect = AsyncMock(side_effect=fake_connect)
-        client.close = MagicMock(side_effect=lambda: setattr(client, "connected", False))
-        client.write_register = AsyncMock(return_value=MagicMock(isError=lambda: False))
-
-        # FC04 input-register reads — return plausible raw register values
-        # batch 1: 4020..4024  (active_function, skip, ventilation_mode, supply_pressure, exhaust_pressure)
-        b1 = _make_register_result(12, 0, 2, 125, 65525)   # supply=125 Pa, exhaust=65525→-11 Pa
-        # batch 2: 4031..4037  (supply: setpoint, flow, skip, rpm, skip, temp, humidity)
-        b2 = _make_register_result(200, 198, 0, 1450, 0, 223, 45)   # humidity=45 %
-        # batch 3: 4041..4047  (exhaust: setpoint, flow, skip, rpm, skip, temp, humidity)
-        b3 = _make_register_result(200, 195, 0, 1420, 0, 201, 50)   # humidity=50 %
-        # single reads
-        b_bypass = _make_register_result(4)                    # closed
-        b_frost = _make_register_result(2, 0, 0)               # no_frost, heater=0, reduction=0
-        b_ntc = _make_register_result(85, 86, 45)              # NTC1=8.5°C, NTC2=8.6°C, RHT=45%
-        b_filter = _make_register_result(0)                    # not dirty
-        b_fh = _make_register_result(720)                      # 720 hours
-        b_optime = _make_register_result(0, 720)               # 720 lifetime hours (32-bit)
-        # FC03 holding reads
-        b_presets = _make_register_result(75, 150, 200, 300)
-        b_imbalance = _make_register_result(0, 0)              # 0% supply, 0% exhaust offset
-        b_bypass_cfg = _make_register_result(0, 240, 120, 20, 0, 2)  # auto, 24°C, 12°C, 2°C, boost=off, position=2
-        b_frost_cfg = _make_register_result(10, 150)           # 1.0°C, 15.0°C
-        b_fcd = _make_register_result(180)
-        b_ctrl = _make_register_result(1, 2, 200, 0)           # modbus_switch, normal, 200, not standby
-
-        client.read_input_registers = AsyncMock(
-            side_effect=[b1, b2, b3, b_bypass, b_frost, b_ntc, b_filter, b_fh, b_optime]
-            * 100  # repeat so multiple poll cycles work
-        )
-        client.read_holding_registers = AsyncMock(
-            side_effect=[b_presets, b_imbalance, b_bypass_cfg, b_frost_cfg, b_fcd, b_ctrl] * 100
-        )
-
-        yield client
+        yield make_fake_client(client=mock_cls.return_value)
 
 
 # ---------------------------------------------------------------------------
