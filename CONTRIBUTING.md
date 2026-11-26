@@ -36,7 +36,7 @@ This project follows the [GitHub flow](https://docs.github.com/en/get-started/us
 2. Make your change — keep pull requests focused on one topic.
 3. If you add or change behaviour, add or update tests in `tests/`.
 4. Update `README.md` if entities, options or setup steps change, and add a line to the `[Unreleased]` section of `CHANGELOG.md`.
-5. If you change UI strings, edit `strings.json` and mirror the change in `translations/en.json`.
+5. If you change UI strings, edit `strings.json`, mirror the change in `translations/en.json` and add it to the other languages in `translations/` (leave English text there if you cannot translate it — native speakers are welcome to fix it).
 6. Make sure the checks pass (see below) and open a pull request.
 
 ### Sign your commits (DCO)

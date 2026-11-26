@@ -97,4 +97,4 @@ body:
     id: additional
     attributes:
       label: Additional context
-      description: Screenshots, diagnostics, anything else that might help.
+      description: Screenshots, the diagnostics file (device page → ⋮ → Download diagnostics), anything else that might help.

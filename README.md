@@ -11,6 +11,8 @@ Control and monitor your **Brink Flair** heat-recovery ventilation unit from Hom
 - 📊 Temperatures, humidity, air flows, fan speeds, duct pressures, CO2 and filter status
 - 🎛️ Ventilation mode, bypass mode, flow presets, bypass and frost-protection settings
 - 🧹 Filter reset button and filter-dirty alert
+- 🌍 Setup, states and error messages in English, Czech, Dutch, German and French
+- 🩺 Downloadable diagnostics for bug and compatibility reports
 - 🏠 Ready-made dashboards (EN/CS) and a Boost script
 
 <!-- TODO: dashboard screenshot
@@ -304,6 +306,10 @@ pytest -k "test_temperature"       # tests matching a keyword
 The tests use `pytest-homeassistant-custom-component` which provides the `hass` fixture and stubs the HA core. The Modbus client is always mocked — no hardware required.
 
 Bump the version in `custom_components/brink_flair/manifest.json` before releasing.
+
+## Diagnostics
+
+Go to **Settings → Devices & services → Brink Flair**, open the device and choose ⋮ → **Download diagnostics**. The file contains the connection settings, firmware and hardware versions and the last values read from the unit (the serial number is redacted). Please attach it to bug and model compatibility reports.
 
 ## Known limitations
 

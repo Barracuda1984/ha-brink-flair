@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Dutch, German and French translations of the setup dialog, states and error messages. Dutch terms follow the Dutch Brink Flair manual
+- Diagnostics: **Download diagnostics** on the device page exports the connection settings, firmware/hardware versions and the last polled values (serial number redacted)
 - Translated states (English, Czech) for the status sensors — Status, Ventilation Mode, Bypass Status, Frost Status and CO2 sensor status — and for the Ventilation Mode and Bypass Mode selects. The UI now shows e.g. "Auto (Modbus)" / "Bez mrazu" instead of `auto_modbus` / `no_frost`. Entity states stay the same raw keys, so automations and dashboards keep working.
 
 ### Fixed

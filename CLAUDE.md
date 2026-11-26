@@ -38,7 +38,7 @@ Follows the standard HA `DataUpdateCoordinator` pattern:
 - **`coordinator.py`** — `BrinkFlairCoordinator` keeps a persistent `AsyncModbusSerialClient` (closed on any error, reconnected via `_ensure_connected()`), reads all monitored data in 18 Modbus transactions per poll cycle, exposes it as a flat `dict`, and provides async write helpers (`async_set_ventilation_step`, `async_set_bypass_mode`, `async_set_standby`, `async_set_co2_threshold`, …). Each write helper calls `_write_register()` then `async_request_refresh()`.
 - **`__init__.py`** — calls `coordinator.async_initialize()` then `coordinator.async_config_entry_first_refresh()`, stores coordinator in `hass.data[DOMAIN][entry_id]`, forwards to all platforms.
 - **`config_flow.py`** — collects serial port, baud rate, slave ID; tests by reading FC04 register 4020 before saving.
-- **`sensor.py`** — declarative `BrinkFlairSensorEntityDescription` (adds `value_fn`) covers 31 sensors (incl. 4× CO2 value + 4× CO2 status). Text status sensors are built with `_enum_sensor()`: `SensorDeviceClass.ENUM`, `options` from the `*_MAP` in `const.py`, states translated via `entity.sensor.<translation_key>.state` in `strings.json` / `translations/*.json` (en, cs). When adding a value to a map, add its translation to all three files — `tests/test_sensor.py` enforces this.
+- **`sensor.py`** — declarative `BrinkFlairSensorEntityDescription` (adds `value_fn`) covers 31 sensors (incl. 4× CO2 value + 4× CO2 status). Text status sensors are built with `_enum_sensor()`: `SensorDeviceClass.ENUM`, `options` from the `*_MAP` in `const.py`, states translated via `entity.sensor.<translation_key>.state` in `strings.json` / `translations/*.json` (en, cs, nl, de, fr). When adding a value to a map, add its translation to `strings.json` and every translation file — `tests/test_sensor.py` enforces this.
 - **`binary_sensor.py`** — `FilterDirtyBinarySensor` reads `data["filter_dirty"]` (register 4100).
 - **`select.py`** — ventilation mode (writes 8001) and bypass mode (writes 6100) using a `current_fn`/`set_fn` pattern.
 - **`number.py`** — 21 numeric settings (flow presets, bypass/frost temperatures, filter days, imbalance offsets, bypass boost position, CO2 thresholds) using the same `value_fn`/`set_fn` pattern.
@@ -103,9 +103,11 @@ custom_components/brink_flair/
   number.py          # 21 number entities
   switch.py          # standby (8003), bypass boost (6104), CO2 mode (6150)
   button.py          # filter reset (8010), appliance reset (8011)
+  diagnostics.py     # config entry diagnostics (serial number redacted)
   strings.json       # UI strings (source of truth)
   translations/
     en.json          # English translations (mirror of strings.json)
+    cs/nl/de/fr.json # Czech, Dutch, German, French (nl terms follow the Dutch Brink manual)
   brand/             # icon/logo PNGs (light + dark, 1x + @2x) shown in HA and HACS
 homeassistant/       # example dashboards (EN/CS) and Boost script
 tests/               # pytest suite (fake Modbus device in conftest.py)
