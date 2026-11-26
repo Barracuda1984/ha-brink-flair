@@ -264,3 +264,44 @@ async def test_write_closes_client_on_error(hass):
         await coord.async_set_ventilation_step(1)
 
     client.close.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Flow preset validation (Brink "Instelwaarden" 1.1–1.4)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "value", "error"),
+    [
+        (0, 0, None),                              # holiday may be 0
+        (0, 50, None),
+        (0, 25, "flow_preset_out_of_range"),       # 1–49 rejected
+        (1, 0, "flow_preset_out_of_range"),        # only holiday may be 0
+        (1, 40, "flow_preset_out_of_range"),
+        (3, 405, "flow_preset_out_of_range"),      # above Flair 400 maximum
+        (2, 210, None),                            # 150 ≤ 210 ≤ 300
+        (2, 140, "flow_preset_order"),             # below low (150)
+        (2, 310, "flow_preset_order"),             # above high (300)
+        (0, 160, "flow_preset_order"),             # above low (150)
+        (3, 400, None),
+    ],
+)
+async def test_flow_preset_validation(hass, index, value, error):
+    """Out-of-range or out-of-order presets raise before anything is written."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    coord._client = client
+    coord.async_request_refresh = AsyncMock()
+    coord.data = await coord._fetch_data()   # presets 75 / 150 / 200 / 300
+
+    if error is None:
+        await coord.async_set_flow_preset(index, value)
+        client.write_register.assert_awaited_once()
+    else:
+        with pytest.raises(ServiceValidationError) as exc:
+            await coord.async_set_flow_preset(index, value)
+        assert exc.value.translation_key == error
+        client.write_register.assert_not_awaited()

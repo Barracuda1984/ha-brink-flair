@@ -9,6 +9,7 @@ from pymodbus.client import AsyncModbusSerialClient
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,6 +19,8 @@ from .const import (
     CO2_STATUS_MAP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    FLOW_PRESET_MAX,
+    FLOW_PRESET_MIN,
     FROST_STATUS_MAP,
     MODBUS_CONTROL_MAP,
     REG_H_BYPASS_BOOST,
@@ -143,7 +146,7 @@ def _decode_serial(r0: int, r1: int, r2: int) -> str:
 
 
 class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Polls the Brink Flair 400 via Modbus RTU and exposes data to entities.
+    """Polls a Brink Flair unit via Modbus RTU and exposes data to entities.
 
     The Modbus client is kept connected across poll cycles and write operations.
     On any communication error the connection is closed so that the next call
@@ -448,7 +451,37 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._write_register(REG_H_BYPASS_BOOST, 1 if enabled else 0)
 
     async def async_set_flow_preset(self, index: int, value: int) -> None:
-        """Set a flow preset (0–3) to the given m³/h value."""
+        """Set a flow preset (0–3) to the given m³/h value.
+
+        Preset 0 accepts 0 or FLOW_PRESET_MIN..max, presets 1–3 accept
+        FLOW_PRESET_MIN..max, and the presets must stay ascending. Values the
+        unit would reject raise ServiceValidationError before anything is written.
+        """
+        if not (value == 0 and index == 0) and not (
+            FLOW_PRESET_MIN <= value <= FLOW_PRESET_MAX
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="flow_preset_out_of_range",
+                translation_placeholders={
+                    "value": str(value),
+                    "minimum": str(FLOW_PRESET_MIN),
+                    "maximum": str(FLOW_PRESET_MAX),
+                },
+            )
+        data = self.data or {}
+        lower = data.get(f"flow_preset_{index - 1}") if index > 0 else None
+        upper = data.get(f"flow_preset_{index + 1}") if index < 3 else None
+        if (lower is not None and value < lower) or (upper is not None and value > upper):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="flow_preset_order",
+                translation_placeholders={
+                    "value": str(value),
+                    "lower": str(lower if lower is not None else 0),
+                    "upper": str(upper if upper is not None else FLOW_PRESET_MAX),
+                },
+            )
         await self._write_register(REG_H_FLOW_PRESET_0 + index, value)
 
     async def async_set_bypass_temp_dwelling(self, value: float) -> None:

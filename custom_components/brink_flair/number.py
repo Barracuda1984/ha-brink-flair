@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, FLOW_PRESET_MAX, FLOW_PRESET_MIN
 from .coordinator import BrinkFlairCoordinator
 
 
@@ -35,7 +35,7 @@ NUMBER_DESCRIPTIONS: tuple[BrinkFlairNumberEntityDescription, ...] = (
         name="Flow Holiday",
         icon="mdi:fan-auto",
         native_min_value=0,
-        native_max_value=400,
+        native_max_value=FLOW_PRESET_MAX,
         native_step=5,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         mode=NumberMode.SLIDER,
@@ -46,8 +46,8 @@ NUMBER_DESCRIPTIONS: tuple[BrinkFlairNumberEntityDescription, ...] = (
         key="flow_preset_1",
         name="Flow Low",
         icon="mdi:fan-speed-1",
-        native_min_value=0,
-        native_max_value=400,
+        native_min_value=FLOW_PRESET_MIN,
+        native_max_value=FLOW_PRESET_MAX,
         native_step=5,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         mode=NumberMode.SLIDER,
@@ -58,8 +58,8 @@ NUMBER_DESCRIPTIONS: tuple[BrinkFlairNumberEntityDescription, ...] = (
         key="flow_preset_2",
         name="Flow Normal",
         icon="mdi:fan-speed-2",
-        native_min_value=0,
-        native_max_value=400,
+        native_min_value=FLOW_PRESET_MIN,
+        native_max_value=FLOW_PRESET_MAX,
         native_step=5,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         mode=NumberMode.SLIDER,
@@ -70,8 +70,8 @@ NUMBER_DESCRIPTIONS: tuple[BrinkFlairNumberEntityDescription, ...] = (
         key="flow_preset_3",
         name="Flow High",
         icon="mdi:fan-speed-3",
-        native_min_value=0,
-        native_max_value=400,
+        native_min_value=FLOW_PRESET_MIN,
+        native_max_value=FLOW_PRESET_MAX,
         native_step=5,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         mode=NumberMode.SLIDER,
@@ -311,7 +311,7 @@ async def async_setup_entry(
 class BrinkFlairNumberEntity(
     CoordinatorEntity[BrinkFlairCoordinator], NumberEntity
 ):
-    """Represents a configurable numeric setting on the Brink Flair 400."""
+    """Represents a configurable numeric setting on a Brink Flair unit."""
 
     entity_description: BrinkFlairNumberEntityDescription
     _attr_has_entity_name = True

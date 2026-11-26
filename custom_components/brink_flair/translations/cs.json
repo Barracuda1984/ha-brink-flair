@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Připojení k Brink Flair 400",
+        "title": "Připojení k Brink Flair",
         "data": {
           "serial_port": "Sériový port",
           "baud_rate": "Přenosová rychlost",
@@ -111,6 +111,14 @@
           "open": "Otevřený"
         }
       }
+    }
+  },
+  "exceptions": {
+    "flow_preset_out_of_range": {
+      "message": "Průtok {value} m³/h je mimo rozsah. Povoleno: {minimum}–{maximum} m³/h (stupeň Dovolená může být i 0)."
+    },
+    "flow_preset_order": {
+      "message": "Průtok {value} m³/h by porušil pořadí stupňů. Musí být mezi {lower} a {upper} m³/h (Dovolená ≤ Nízký ≤ Normální ≤ Vysoký)."
     }
   }
 }
