@@ -9,6 +9,12 @@ All notable changes to this project will be documented in this file.
 - `manifest.json`: codeowner set to `@Barracuda1984`, documentation links to the README, keys sorted per hassfest
 - `hacs.json`: removed obsolete `render_readme` option
 
+### Tests
+- Fixed the test suite (all tests were failing): custom integrations are now enabled in pytest, and the Modbus mock answers by register address instead of call order
+- New tests for 32-bit operating time, signed imbalance offsets, CO2 registers, device version decoding and all write helpers (coverage 97 %)
+- `pyserial` added to `requirements_test.txt`
+- CI: new GitHub Actions workflow with HACS, hassfest and test jobs
+
 ---
 
 ## [0.1.4] — 2026-11-21
