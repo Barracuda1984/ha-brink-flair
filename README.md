@@ -66,11 +66,9 @@ Tested environment: Home Assistant OS 18.4, Core 2026.11.2, Supervisor 2026.11.0
 
 Source: Brink *Modbus UWA2-B/UWA2-E installation regulations* (614882), available on the [Brink website](https://www.brinkclimatesystems.com).
 
-<!-- TODO: wiring photos
-| Connector X15 on UWA2-B | Adapter wiring |
-|---|---|
-| ![X15](docs/images/wiring-x15.jpg) | ![Adapter](docs/images/wiring-adapter.jpg) |
--->
+![Modbus connector on the UWA2-B board](docs/images/wiring-modbus.jpg)
+
+*The red plug is the Modbus connector X15 on the author's Flair 400, wired with a shielded twisted pair (STP) running to the RS-485 adapter at the Home Assistant server.*
 
 Serial framing is fixed at **8E1** (8 data bits, even parity, 1 stop bit).
 
@@ -84,6 +82,8 @@ On the Brink Flair touchscreen set:
 | 14.2 Slave address | _(unique per device)_ | **20** |
 | 14.3 Baudrate | _(must match HA config)_ | **19200** |
 | 14.4 Parity | Even | Even |
+
+![Display menus 14.1 Type of Bus = Modbus and 14.4 Parity = Even (Czech display language)](docs/images/display-modbus-menu.jpg)
 
 ## Installation
 
@@ -200,13 +200,21 @@ Flow presets must stay in ascending order (holiday ≤ low ≤ normal ≤ high),
 
 Ready-made Lovelace dashboards are provided in `homeassistant/` in English and Czech.
 
+| Ventilation mode buttons | Settings card |
+|---|---|
+| ![Ventilation mode buttons](docs/images/ventilation-modes.png) | ![Settings card](docs/images/settings.png) |
+
 ### Installation
 
 1. Copy the contents of `homeassistant/dashboard_en.yaml` (or `dashboard_cs.yaml`)
-2. In Home Assistant go to **Settings → Dashboards → Add Dashboard**
+2. In Home Assistant go to **Settings → Dashboards → Add Dashboard → New dashboard from scratch**
 3. Give it a name (e.g. *Brink Flair*) and confirm
-4. Open the new dashboard, click ⋮ → **Edit dashboard** → ⋮ → **Raw configuration editor**
-5. Paste the copied YAML and click **Save**
+4. Open the new dashboard, click ✏️ (**Edit dashboard**) → ⋮ → **Raw configuration editor**
+5. Replace everything in the editor with the copied YAML and click **Save**
+
+To add it to an existing dashboard instead, open that dashboard's **Raw configuration editor** and append the view (the item starting with `- title: Brink Flair 400`) to its `views:` list.
+
+The Appliance Reset button is not on the dashboard on purpose — it is disabled by default and resets the unit with one click.
 
 > The ventilation mode buttons use [`custom:button-card`](https://github.com/custom-cards/button-card) (installable via HACS → Frontend). If you prefer not to install it, each dashboard contains a commented-out fallback that uses the built-in `select` card instead.
 
