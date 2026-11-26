@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - Czech dashboard (`homeassistant/dashboard_cs.yaml`) was invalid YAML — the ventilation mode block was indented one level too deep
 
 ### Changed
-- Example dashboards no longer show NTC2 and RHT humidity (optional sensors, not fitted on most units)
+- Example dashboards show optional sensors (NTC2, RHT humidity, CO2 1–4) as conditional rows — a row appears only when the sensor is fitted, so adding a CO2 sensor later needs no dashboard change
 
 ### Docs
 - README: credits to [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus)
