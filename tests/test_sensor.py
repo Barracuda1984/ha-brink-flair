@@ -59,7 +59,7 @@ async def _setup(hass: HomeAssistant) -> None:
         ("sensor.brink_flair_400_ventilation_mode", "normal", VENTILATION_MODE_MAP),
         ("sensor.brink_flair_400_bypass_status", "closed", BYPASS_STATUS_MAP),
         ("sensor.brink_flair_400_frost_status", "no_frost", FROST_STATUS_MAP),
-        ("sensor.brink_flair_400_co2_sensor_1_status", "error", CO2_STATUS_MAP),
+        ("sensor.brink_flair_400_co2_sensor_1_status", "running", CO2_STATUS_MAP),
     ],
 )
 async def test_enum_sensor_state_and_options(
@@ -81,6 +81,18 @@ async def test_enum_sensor_unknown_raw_value(hass, mock_modbus_client):
     await _setup(hass)
 
     assert hass.states.get("sensor.brink_flair_400_status").state == STATE_UNKNOWN
+
+
+async def test_unfitted_optional_sensors_are_unknown(hass, mock_modbus_client):
+    """NTC2 999.9 °C, RHT 0 % and non-initialized CO2 sensors show as unknown."""
+    mock_modbus_client.input_registers[4082] = 9999
+    mock_modbus_client.input_registers[4083] = 0
+    await _setup(hass)
+
+    assert hass.states.get("sensor.brink_flair_400_temperature_ntc2").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.brink_flair_400_humidity_rht_sensor").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.brink_flair_400_co2_sensor_3").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.brink_flair_400_co2_sensor_1").state == "430"
 
 
 @pytest.mark.parametrize("path", TRANSLATION_FILES, ids=lambda p: p.name)
