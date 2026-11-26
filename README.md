@@ -292,3 +292,7 @@ pytest -k "test_temperature"       # tests matching a keyword
 The tests use `pytest-homeassistant-custom-component` which provides the `hass` fixture and stubs the HA core. The Modbus client is always mocked — no hardware required.
 
 Bump the version in `custom_components/brink_flair/manifest.json` before releasing.
+
+## Credits
+
+This integration was inspired by [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus), an ESPHome-based solution for Brink Flair units using an ESP32/ESP8266 with a TTL-to-RS485 module. Its register research and per-model configuration were a valuable reference. If you prefer a standalone ESP board over a USB adapter on the Home Assistant host, check it out.
