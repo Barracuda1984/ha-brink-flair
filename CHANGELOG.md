@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Brand icons and logos (light and dark) bundled in `custom_components/brink_flair/brand/`
+
 ### Changed
 - Minimum Home Assistant version raised to **2025.9.0** (first release shipping pymodbus ≥ 3.10, matching the integration's requirement)
 - `manifest.json`: codeowner set to `@Barracuda1984`, documentation links to the README, keys sorted per hassfest

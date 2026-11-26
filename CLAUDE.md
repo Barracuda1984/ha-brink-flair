@@ -83,7 +83,7 @@ pytest --cov
 
 ## CI and repo conventions
 
-- `.github/workflows/validate.yml`: HACS action (brands check ignored until the integration is in `home-assistant/brands`), hassfest, and pytest.
+- `.github/workflows/validate.yml`: HACS action (incl. brands check, satisfied by `custom_components/brink_flair/brand/`), hassfest, and pytest.
 - Issue forms in `.github/ISSUE_TEMPLATE/` (bug report, working model report); questions go to GitHub Discussions.
 - Commits use Conventional Commits prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `test:`) and are signed off (`git commit -s`). Add user-facing changes to `[Unreleased]` in `CHANGELOG.md`.
 - `manifest.json` keys: `domain`, `name`, then alphabetical (hassfest).
@@ -106,6 +106,7 @@ custom_components/brink_flair/
   strings.json       # UI strings (source of truth)
   translations/
     en.json          # English translations (mirror of strings.json)
+  brand/             # icon/logo PNGs (light + dark, 1x + @2x) shown in HA and HACS
 homeassistant/       # example dashboards (EN/CS) and Boost script
 tests/               # pytest suite (fake Modbus device in conftest.py)
 .github/             # CI workflow and issue forms
