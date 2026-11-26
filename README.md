@@ -8,7 +8,7 @@ Custom integration for the **Brink Flair 400** (and other Flair models) communic
   - Standard model: connector **X15** on PCB UWA2-B
   - Plus model: connector **X06** on Plus PCB UWA2-E
 - Serial framing is fixed at **8E1** (8 data bits, even parity, 1 stop bit)
-- Home Assistant 2024.1.0 or newer
+- Home Assistant 2025.9.0 or newer (first release shipping pymodbus ≥ 3.10)
 
 ## Device configuration
 

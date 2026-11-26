@@ -1,12 +1,12 @@
 {
   "domain": "brink_flair",
   "name": "Brink Flair",
-  "version": "0.1.4",
+  "codeowners": ["@Barracuda1984"],
   "config_flow": true,
-  "documentation": "https://github.com/Barracuda1984/ha-brink-flair",
+  "dependencies": [],
+  "documentation": "https://github.com/Barracuda1984/ha-brink-flair#readme",
+  "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Barracuda1984/ha-brink-flair/issues",
   "requirements": ["pymodbus>=3.10.0,<4"],
-  "dependencies": [],
-  "codeowners": ["@ZdenekSvachula"],
-  "iot_class": "local_polling"
+  "version": "0.1.4"
 }
