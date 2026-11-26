@@ -8,14 +8,16 @@ All notable changes to this project will be documented in this file.
 - Translated states (English, Czech) for the status sensors — Status, Ventilation Mode, Bypass Status, Frost Status and CO2 sensor status — and for the Ventilation Mode and Bypass Mode selects. The UI now shows e.g. "Auto (Modbus)" / "Bez mrazu" instead of `auto_modbus` / `no_frost`. Entity states stay the same raw keys, so automations and dashboards keep working.
 
 ### Fixed
+- Flow presets accepted values the unit rejects: Low/Normal/High now start at 50 m³/h, Holiday accepts 0 or 50–400 m³/h, and presets must stay in ascending order (Brink settings 1.1–1.4). Invalid values raise a translated error instead of being written
 - Optional sensors that are not fitted no longer report bogus values: NTC2 (999.9 °C) and the NTC1 outside sensor when disconnected or out of range, RHT humidity (0 %), and CO2 sensors that are not initialized or in error (0 ppm) now show as *unknown*
 - Czech dashboard (`homeassistant/dashboard_cs.yaml`) was invalid YAML — the ventilation mode block was indented one level too deep
 
 ### Changed
+- Setup dialog and new config entries are titled "Brink Flair" instead of "Brink Flair 400" (entity IDs are unchanged)
 - Example dashboards show optional sensors (NTC2, RHT humidity, CO2 1–4) as conditional rows — a row appears only when the sensor is fitted, so adding a CO2 sensor later needs no dashboard change
 
 ### Docs
-- README: credits to [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus)
+- README: credits to [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus) and a *Known limitations* section (Frost Fan Reduction reads 100 % without frost, Modbus control takeover, optional sensors)
 
 ---
 

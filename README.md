@@ -140,7 +140,7 @@ Or manually:
 | Supply Pressure | Pa | Duct pressure supply side (register 4023) |
 | Exhaust Pressure | Pa | Duct pressure exhaust side (register 4024) |
 | Frost Heater Power | % | Pre-heater output (register 4071) |
-| Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) |
+| Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) — see [Known limitations](#known-limitations) |
 | Temperature NTC2 | °C | Second NTC temperature sensor, optional — unknown when not fitted (register 4082) |
 | Humidity RHT Sensor | % | Standalone humidity sensor, optional — unknown when not fitted (register 4083) |
 | Operating Time | h | Lifetime operating hours (registers 4113–4114) |
@@ -173,10 +173,10 @@ Or manually:
 ### Number (sliders)
 | Entity | Range | Description |
 |--------|-------|-------------|
-| Flow Holiday | 0–400 m³/h | Flow preset 0 (register 6000) |
-| Flow Low | 0–400 m³/h | Flow preset 1 (register 6001) |
-| Flow Normal | 0–400 m³/h | Flow preset 2 (register 6002) |
-| Flow High | 0–400 m³/h | Flow preset 3 (register 6003) |
+| Flow Holiday | 0 or 50–400 m³/h | Flow preset 0 (register 6000) |
+| Flow Low | 50–400 m³/h | Flow preset 1 (register 6001) |
+| Flow Normal | 50–400 m³/h | Flow preset 2 (register 6002) |
+| Flow High | 50–400 m³/h | Flow preset 3 (register 6003) |
 | Bypass Temp from Home | 15–35 °C | Register 6101 |
 | Bypass Temp from Outside | 7–15 °C | Register 6102 |
 | Bypass Hysteresis | 0–5 °C | Register 6103 |
@@ -187,6 +187,8 @@ Or manually:
 | Exhaust Imbalance Offset | −15–15 % | Register 6036 |
 | Bypass Boost Position | 0–3 | Ventilation step used during bypass boost (register 6105) |
 | CO2 Sensor 1–4 Low / High Level | 400–2000 ppm | CO2 thresholds (registers 6151–6158) |
+
+Flow presets must stay in ascending order (holiday ≤ low ≤ normal ≤ high), as the unit requires. A value outside the allowed range or order is rejected with an error before anything is written.
 
 ### Buttons
 | Entity | Description |
@@ -294,6 +296,12 @@ pytest -k "test_temperature"       # tests matching a keyword
 The tests use `pytest-homeassistant-custom-component` which provides the `hass` fixture and stubs the HA core. The Modbus client is always mocked — no hardware required.
 
 Bump the version in `custom_components/brink_flair/manifest.json` before releasing.
+
+## Known limitations
+
+- **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
+- On every start the integration switches the unit to Modbus control (register 8000 = 1), so the wall switch and the unit's own CO2-based control are overridden while Home Assistant is running.
+- Optional sensors (NTC2, RHT humidity, CO2 1–4) show as *unknown* when they are not fitted.
 
 ## Credits
 
