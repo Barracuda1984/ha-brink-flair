@@ -208,6 +208,8 @@ Ready-made Lovelace dashboards are provided in `homeassistant/` in English and C
 
 > The ventilation mode buttons use [`custom:button-card`](https://github.com/custom-cards/button-card) (installable via HACS → Frontend). If you prefer not to install it, each dashboard contains a commented-out fallback that uses the built-in `select` card instead.
 
+Optional sensors (NTC2, RHT humidity, CO2 1–4) are shown as conditional rows: a row appears only when the sensor is fitted and reports a value, so sensors added later show up automatically.
+
 ### Entity IDs
 
 Entity IDs are auto-generated from the device name **Brink Flair 400**, so they follow the pattern `sensor.brink_flair_400_*`. If HA assigned different IDs in your instance, find the correct IDs under **Settings → Entities** and update them in the dashboard YAML.
