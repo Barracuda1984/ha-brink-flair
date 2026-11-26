@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Translated states (English, Czech) for the status sensors — Status, Ventilation Mode, Bypass Status, Frost Status and CO2 sensor status — and for the Ventilation Mode and Bypass Mode selects. The UI now shows e.g. "Auto (Modbus)" / "Bez mrazu" instead of `auto_modbus` / `no_frost`. Entity states stay the same raw keys, so automations and dashboards keep working.
+
+### Docs
+- README: credits to [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus)
+
+---
+
 ## [1.0.0] — 2026-11-26
 
 First stable release. No changes to entities or Modbus behaviour compared to 0.1.4 — existing installations update without reconfiguration.
