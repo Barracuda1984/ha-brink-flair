@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.1.0] — 2026-11-27
+
+Translations, diagnostics and safer flow presets. No changes to entity IDs — existing installations update without reconfiguration; re-paste the example dashboards to get the conditional sensor rows.
 
 ### Added
 - Dutch, German and French translations of the setup dialog, states and error messages. Dutch terms follow the Dutch Brink Flair manual
