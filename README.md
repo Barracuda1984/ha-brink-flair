@@ -30,7 +30,7 @@ The integration is developed and tested on a **Flair 400**. Other Flair units us
 | Flair 325 | UWA2-B / UWA2-E | ❓ Untested | — |
 | Flair 600 | UWA2-B / UWA2-E | ❓ Untested | — |
 
-Tested environment: Home Assistant OS 18.4, Core 2026.11.2, Supervisor 2026.11.0, integration 0.1.4.
+Tested environment: Flair 400 with firmware S3.01.05.0001 / hardware H2.1, Home Assistant OS 18.4, Core 2026.11.3, integration 1.1.0. The firmware and hardware versions are shown on the device page in Home Assistant.
 
 **Have a different model?** Please file a [working model report](https://github.com/Barracuda1984/ha-brink-flair/issues/new?template=working_model.yml) — whether it works or not — and it will be added to this table.
 
@@ -311,7 +311,7 @@ Go to **Settings → Devices & services → Brink Flair**, open the device and c
 
 ## Known limitations
 
-- **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
+- **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400 with firmware S3.01.05, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
 - On every start the integration switches the unit to Modbus control (register 8000 = 1), so the wall switch and the unit's own CO2-based control are overridden while Home Assistant is running.
 - Optional sensors (NTC2, RHT humidity, CO2 1–4) show as *unknown* when they are not fitted.
 

@@ -20,7 +20,7 @@
       "unknown": "Erreur inattendue — consultez les journaux de Home Assistant"
     },
     "abort": {
-      "already_configured": "Cet appareil est déjà configuré"
+      "already_configured": "L'appareil est déjà configuré"
     }
   },
   "entity": {
