@@ -15,9 +15,7 @@ Control and monitor your **Brink Flair** heat-recovery ventilation unit from Hom
 - 🩺 Downloadable diagnostics for bug and compatibility reports
 - 🏠 Ready-made dashboards (EN/CS) and a Boost script
 
-<!-- TODO: dashboard screenshot
-![Dashboard](docs/images/dashboard.png)
--->
+![Example dashboard (Czech)](docs/images/dashboard.png)
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Barracuda1984&repository=ha-brink-flair&category=integration)
 
