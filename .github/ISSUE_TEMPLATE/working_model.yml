@@ -79,7 +79,7 @@ body:
     id: notes
     attributes:
       label: Notes
-      description: What did not work, entities showing wrong or unknown values, anything specific to your model.
+      description: What did not work, entities showing wrong or unknown values, anything specific to your model. Please attach the diagnostics file (device page → ⋮ → Download diagnostics).
   - type: textarea
     id: photos
     attributes:

@@ -54,7 +54,7 @@ async def async_setup_entry(
 class BrinkFlairButtonEntity(
     CoordinatorEntity[BrinkFlairCoordinator], ButtonEntity
 ):
-    """A pushbutton that triggers a one-shot command on the Brink Flair 400."""
+    """A pushbutton that triggers a one-shot command on a Brink Flair unit."""
 
     entity_description: BrinkFlairButtonEntityDescription
     _attr_has_entity_name = True

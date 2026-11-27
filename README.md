@@ -11,11 +11,11 @@ Control and monitor your **Brink Flair** heat-recovery ventilation unit from Hom
 - 📊 Temperatures, humidity, air flows, fan speeds, duct pressures, CO2 and filter status
 - 🎛️ Ventilation mode, bypass mode, flow presets, bypass and frost-protection settings
 - 🧹 Filter reset button and filter-dirty alert
+- 🌍 Setup, states and error messages in English, Czech, Dutch, German and French
+- 🩺 Downloadable diagnostics for bug and compatibility reports
 - 🏠 Ready-made dashboards (EN/CS) and a Boost script
 
-<!-- TODO: dashboard screenshot
-![Dashboard](docs/images/dashboard.png)
--->
+![Example dashboard (Czech)](docs/images/dashboard.png)
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Barracuda1984&repository=ha-brink-flair&category=integration)
 
@@ -30,7 +30,7 @@ The integration is developed and tested on a **Flair 400**. Other Flair units us
 | Flair 325 | UWA2-B / UWA2-E | ❓ Untested | — |
 | Flair 600 | UWA2-B / UWA2-E | ❓ Untested | — |
 
-Tested environment: Home Assistant OS 18.4, Core 2026.11.2, Supervisor 2026.11.0, integration 0.1.4.
+Tested environment: Flair 400 with firmware S3.01.05.0001 / hardware H2.1, Home Assistant OS 18.4, Core 2026.11.3, integration 1.1.0. The firmware and hardware versions are shown on the device page in Home Assistant.
 
 **Have a different model?** Please file a [working model report](https://github.com/Barracuda1984/ha-brink-flair/issues/new?template=working_model.yml) — whether it works or not — and it will be added to this table.
 
@@ -66,11 +66,9 @@ Tested environment: Home Assistant OS 18.4, Core 2026.11.2, Supervisor 2026.11.0
 
 Source: Brink *Modbus UWA2-B/UWA2-E installation regulations* (614882), available on the [Brink website](https://www.brinkclimatesystems.com).
 
-<!-- TODO: wiring photos
-| Connector X15 on UWA2-B | Adapter wiring |
-|---|---|
-| ![X15](docs/images/wiring-x15.jpg) | ![Adapter](docs/images/wiring-adapter.jpg) |
--->
+![Modbus connector on the UWA2-B board](docs/images/wiring-modbus.jpg)
+
+*The red plug is the Modbus connector X15 on the author's Flair 400, wired with a shielded twisted pair (STP) running to the RS-485 adapter at the Home Assistant server.*
 
 Serial framing is fixed at **8E1** (8 data bits, even parity, 1 stop bit).
 
@@ -84,6 +82,8 @@ On the Brink Flair touchscreen set:
 | 14.2 Slave address | _(unique per device)_ | **20** |
 | 14.3 Baudrate | _(must match HA config)_ | **19200** |
 | 14.4 Parity | Even | Even |
+
+![Display menus 14.1 Type of Bus = Modbus and 14.4 Parity = Even (Czech display language)](docs/images/display-modbus-menu.jpg)
 
 ## Installation
 
@@ -140,12 +140,12 @@ Or manually:
 | Supply Pressure | Pa | Duct pressure supply side (register 4023) |
 | Exhaust Pressure | Pa | Duct pressure exhaust side (register 4024) |
 | Frost Heater Power | % | Pre-heater output (register 4071) |
-| Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) |
-| Temperature NTC2 | °C | Second NTC temperature sensor (register 4082) |
-| Humidity RHT Sensor | % | Standalone humidity sensor (register 4083) |
+| Frost Fan Reduction | % | Fan speed reduction during frost (register 4072) — see [Known limitations](#known-limitations) |
+| Temperature NTC2 | °C | Second NTC temperature sensor, optional — unknown when not fitted (register 4082) |
+| Humidity RHT Sensor | % | Standalone humidity sensor, optional — unknown when not fitted (register 4083) |
 | Operating Time | h | Lifetime operating hours (registers 4113–4114) |
 | Current Filter Hours | h | Hours since last filter reset (register 4115) |
-| CO2 Sensor 1–4 | ppm | CO2 concentration (registers 4201, 4203, 4205, 4207) |
+| CO2 Sensor 1–4 | ppm | CO2 concentration, optional — unknown when the sensor is not fitted (registers 4201, 4203, 4205, 4207) |
 | CO2 Sensor 1–4 Status | — | CO2 sensor state (registers 4200, 4202, 4204, 4206) |
 | Status | — | Active function text (register 4020) |
 | Ventilation Mode | — | Current operational mode (register 4022) |
@@ -173,10 +173,10 @@ Or manually:
 ### Number (sliders)
 | Entity | Range | Description |
 |--------|-------|-------------|
-| Flow Holiday | 0–400 m³/h | Flow preset 0 (register 6000) |
-| Flow Low | 0–400 m³/h | Flow preset 1 (register 6001) |
-| Flow Normal | 0–400 m³/h | Flow preset 2 (register 6002) |
-| Flow High | 0–400 m³/h | Flow preset 3 (register 6003) |
+| Flow Holiday | 0 or 50–400 m³/h | Flow preset 0 (register 6000) |
+| Flow Low | 50–400 m³/h | Flow preset 1 (register 6001) |
+| Flow Normal | 50–400 m³/h | Flow preset 2 (register 6002) |
+| Flow High | 50–400 m³/h | Flow preset 3 (register 6003) |
 | Bypass Temp from Home | 15–35 °C | Register 6101 |
 | Bypass Temp from Outside | 7–15 °C | Register 6102 |
 | Bypass Hysteresis | 0–5 °C | Register 6103 |
@@ -188,6 +188,8 @@ Or manually:
 | Bypass Boost Position | 0–3 | Ventilation step used during bypass boost (register 6105) |
 | CO2 Sensor 1–4 Low / High Level | 400–2000 ppm | CO2 thresholds (registers 6151–6158) |
 
+Flow presets must stay in ascending order (holiday ≤ low ≤ normal ≤ high), as the unit requires. A value outside the allowed range or order is rejected with an error before anything is written.
+
 ### Buttons
 | Entity | Description |
 |--------|-------------|
@@ -198,15 +200,25 @@ Or manually:
 
 Ready-made Lovelace dashboards are provided in `homeassistant/` in English and Czech.
 
+| Ventilation mode buttons | Settings card |
+|---|---|
+| ![Ventilation mode buttons](docs/images/ventilation-modes.png) | ![Settings card](docs/images/settings.png) |
+
 ### Installation
 
 1. Copy the contents of `homeassistant/dashboard_en.yaml` (or `dashboard_cs.yaml`)
-2. In Home Assistant go to **Settings → Dashboards → Add Dashboard**
+2. In Home Assistant go to **Settings → Dashboards → Add Dashboard → New dashboard from scratch**
 3. Give it a name (e.g. *Brink Flair*) and confirm
-4. Open the new dashboard, click ⋮ → **Edit dashboard** → ⋮ → **Raw configuration editor**
-5. Paste the copied YAML and click **Save**
+4. Open the new dashboard, click ✏️ (**Edit dashboard**) → ⋮ → **Raw configuration editor**
+5. Replace everything in the editor with the copied YAML and click **Save**
+
+To add it to an existing dashboard instead, open that dashboard's **Raw configuration editor** and append the view (the item starting with `- title: Brink Flair 400`) to its `views:` list.
+
+The Appliance Reset button is not on the dashboard on purpose — it is disabled by default and resets the unit with one click.
 
 > The ventilation mode buttons use [`custom:button-card`](https://github.com/custom-cards/button-card) (installable via HACS → Frontend). If you prefer not to install it, each dashboard contains a commented-out fallback that uses the built-in `select` card instead.
+
+Optional sensors (NTC2, RHT humidity, CO2 1–4) are shown as conditional rows: a row appears only when the sensor is fitted and reports a value, so sensors added later show up automatically.
 
 ### Entity IDs
 
@@ -292,3 +304,17 @@ pytest -k "test_temperature"       # tests matching a keyword
 The tests use `pytest-homeassistant-custom-component` which provides the `hass` fixture and stubs the HA core. The Modbus client is always mocked — no hardware required.
 
 Bump the version in `custom_components/brink_flair/manifest.json` before releasing.
+
+## Diagnostics
+
+Go to **Settings → Devices & services → Brink Flair**, open the device and choose ⋮ → **Download diagnostics**. The file contains the connection settings, firmware and hardware versions and the last values read from the unit (the serial number is redacted). Please attach it to bug and model compatibility reports.
+
+## Known limitations
+
+- **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400 with firmware S3.01.05, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
+- On every start the integration switches the unit to Modbus control (register 8000 = 1), so the wall switch and the unit's own CO2-based control are overridden while Home Assistant is running.
+- Optional sensors (NTC2, RHT humidity, CO2 1–4) show as *unknown* when they are not fitted.
+
+## Credits
+
+This integration was inspired by [fonske/Brink-flair-modbus](https://github.com/fonske/Brink-flair-modbus), an ESPHome-based solution for Brink Flair units using an ESP32/ESP8266 with a TTL-to-RS485 module. Its register research and per-model configuration were a valuable reference. If you prefer a standalone ESP board over a USB adapter on the Home Assistant host, check it out.

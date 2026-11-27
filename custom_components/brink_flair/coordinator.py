@@ -9,6 +9,7 @@ from pymodbus.client import AsyncModbusSerialClient
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,6 +19,8 @@ from .const import (
     CO2_STATUS_MAP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    FLOW_PRESET_MAX,
+    FLOW_PRESET_MIN,
     FROST_STATUS_MAP,
     MODBUS_CONTROL_MAP,
     REG_H_BYPASS_BOOST,
@@ -74,6 +77,28 @@ def _temp(raw: int) -> float:
     return _signed(raw) / 10.0
 
 
+# Raw value an NTC input reports when no sensor is fitted (shown as 999.9 °C)
+NTC_NOT_CONNECTED = 9999
+
+
+def _ntc(raw: int) -> float | None:
+    """NTC temperature in °C, or None when the sensor is not fitted / out of range."""
+    if raw == NTC_NOT_CONNECTED:
+        return None
+    value = _temp(raw)
+    return value if -50.0 <= value <= 100.0 else None
+
+
+def _rht(raw: int) -> int | None:
+    """Standalone RHT humidity; 0 % means no sensor is fitted (impossible indoors)."""
+    return raw or None
+
+
+def _co2_value(status: str, raw: int) -> int | None:
+    """CO2 ppm, or None when the sensor is not fitted / not running."""
+    return None if status in ("not_initialized", "error") else raw
+
+
 def _humidity(raw: int) -> int:
     """Unsigned 16-bit register → % (device stores integer %, not tenths)."""
     return raw
@@ -121,7 +146,7 @@ def _decode_serial(r0: int, r1: int, r2: int) -> str:
 
 
 class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Polls the Brink Flair 400 via Modbus RTU and exposes data to entities.
+    """Polls a Brink Flair unit via Modbus RTU and exposes data to entities.
 
     The Modbus client is kept connected across poll cycles and write operations.
     On any communication error the connection is closed so that the next call
@@ -328,6 +353,10 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._client.close()
             raise
 
+        co2_status = [
+            CO2_STATUS_MAP.get(b_co2.registers[2 * i], "unknown") for i in range(4)
+        ]
+
         return {
             # Status (FC04)
             "active_function": ACTIVE_FUNCTION_MAP.get(b1.registers[0], "unknown"),
@@ -351,9 +380,9 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "frost_status": FROST_STATUS_MAP.get(b_frost.registers[0], "unknown"),
             "frost_heater_power": b_frost.registers[1],
             "frost_fan_reduction": b_frost.registers[2],
-            "outside_temperature": _temp(b_ntc.registers[0]),
-            "ntc2_temperature": _temp(b_ntc.registers[1]),
-            "rht_humidity": _humidity(b_ntc.registers[2]),
+            "outside_temperature": _ntc(b_ntc.registers[0]),
+            "ntc2_temperature": _ntc(b_ntc.registers[1]),
+            "rht_humidity": _rht(b_ntc.registers[2]),
             "operating_time": (b_optime.registers[0] << 16) | b_optime.registers[1],
             "filter_dirty": bool(b_filter.registers[0]),
             "filter_hours": b_fh.registers[0],
@@ -382,15 +411,15 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "ventilation_step": b_ctrl.registers[1],
             "flow_rate_setpoint": b_ctrl.registers[2],
             "standby": bool(b_ctrl.registers[3]),
-            # CO2 sensors (FC04 input)
-            "co2_sensor_1_status": CO2_STATUS_MAP.get(b_co2.registers[0], "unknown"),
-            "co2_sensor_1_value": b_co2.registers[1],
-            "co2_sensor_2_status": CO2_STATUS_MAP.get(b_co2.registers[2], "unknown"),
-            "co2_sensor_2_value": b_co2.registers[3],
-            "co2_sensor_3_status": CO2_STATUS_MAP.get(b_co2.registers[4], "unknown"),
-            "co2_sensor_3_value": b_co2.registers[5],
-            "co2_sensor_4_status": CO2_STATUS_MAP.get(b_co2.registers[6], "unknown"),
-            "co2_sensor_4_value": b_co2.registers[7],
+            # CO2 sensors (FC04 input) — value is None when the sensor is not fitted
+            "co2_sensor_1_status": co2_status[0],
+            "co2_sensor_1_value": _co2_value(co2_status[0], b_co2.registers[1]),
+            "co2_sensor_2_status": co2_status[1],
+            "co2_sensor_2_value": _co2_value(co2_status[1], b_co2.registers[3]),
+            "co2_sensor_3_status": co2_status[2],
+            "co2_sensor_3_value": _co2_value(co2_status[2], b_co2.registers[5]),
+            "co2_sensor_4_status": co2_status[3],
+            "co2_sensor_4_value": _co2_value(co2_status[3], b_co2.registers[7]),
             # CO2 config (FC03 holding)
             "co2_mode": bool(b_co2_mode.registers[0]),
             "co2_sensor_1_low": b_co2_cfg.registers[0],
@@ -422,7 +451,37 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._write_register(REG_H_BYPASS_BOOST, 1 if enabled else 0)
 
     async def async_set_flow_preset(self, index: int, value: int) -> None:
-        """Set a flow preset (0–3) to the given m³/h value."""
+        """Set a flow preset (0–3) to the given m³/h value.
+
+        Preset 0 accepts 0 or FLOW_PRESET_MIN..max, presets 1–3 accept
+        FLOW_PRESET_MIN..max, and the presets must stay ascending. Values the
+        unit would reject raise ServiceValidationError before anything is written.
+        """
+        if not (value == 0 and index == 0) and not (
+            FLOW_PRESET_MIN <= value <= FLOW_PRESET_MAX
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="flow_preset_out_of_range",
+                translation_placeholders={
+                    "value": str(value),
+                    "minimum": str(FLOW_PRESET_MIN),
+                    "maximum": str(FLOW_PRESET_MAX),
+                },
+            )
+        data = self.data or {}
+        lower = data.get(f"flow_preset_{index - 1}") if index > 0 else None
+        upper = data.get(f"flow_preset_{index + 1}") if index < 3 else None
+        if (lower is not None and value < lower) or (upper is not None and value > upper):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="flow_preset_order",
+                translation_placeholders={
+                    "value": str(value),
+                    "lower": str(lower if lower is not None else 0),
+                    "upper": str(upper if upper is not None else FLOW_PRESET_MAX),
+                },
+            )
         await self._write_register(REG_H_FLOW_PRESET_0 + index, value)
 
     async def async_set_bypass_temp_dwelling(self, value: float) -> None:

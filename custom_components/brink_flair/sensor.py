@@ -21,7 +21,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    ACTIVE_FUNCTION_MAP,
+    BYPASS_STATUS_MAP,
+    CO2_STATUS_MAP,
+    DOMAIN,
+    FROST_STATUS_MAP,
+    VENTILATION_MODE_MAP,
+)
 from .coordinator import BrinkFlairCoordinator
 
 try:
@@ -36,6 +43,31 @@ class BrinkFlairSensorEntityDescription(SensorEntityDescription):
     """Extends SensorEntityDescription with a value extractor."""
 
     value_fn: Any  # Callable[[dict[str, Any]], Any]
+
+
+def _enum_value(key: str, options: list[str]) -> Any:
+    """Return a value_fn for an ENUM sensor; values outside options become None (unknown)."""
+
+    def _value(data: dict[str, Any]) -> str | None:
+        value = data.get(key)
+        return value if value in options else None
+
+    return _value
+
+
+def _enum_sensor(
+    key: str, name: str, value_map: dict[int, str], translation_key: str | None = None
+) -> BrinkFlairSensorEntityDescription:
+    """Build an ENUM sensor whose states are translated via strings.json."""
+    options = list(value_map.values())
+    return BrinkFlairSensorEntityDescription(
+        key=key,
+        name=name,
+        translation_key=translation_key or key,
+        device_class=SensorDeviceClass.ENUM,
+        options=options,
+        value_fn=_enum_value(key, options),
+    )
 
 
 SENSOR_DESCRIPTIONS: tuple[BrinkFlairSensorEntityDescription, ...] = (
@@ -191,26 +223,10 @@ SENSOR_DESCRIPTIONS: tuple[BrinkFlairSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("filter_hours"),
     ),
     # ── Status (text) ─────────────────────────────────────────────────
-    BrinkFlairSensorEntityDescription(
-        key="active_function",
-        name="Status",
-        value_fn=lambda d: d.get("active_function"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="ventilation_mode",
-        name="Ventilation Mode",
-        value_fn=lambda d: d.get("ventilation_mode"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="bypass_status",
-        name="Bypass Status",
-        value_fn=lambda d: d.get("bypass_status"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="frost_status",
-        name="Frost Status",
-        value_fn=lambda d: d.get("frost_status"),
-    ),
+    _enum_sensor("active_function", "Status", ACTIVE_FUNCTION_MAP),
+    _enum_sensor("ventilation_mode", "Ventilation Mode", VENTILATION_MODE_MAP),
+    _enum_sensor("bypass_status", "Bypass Status", BYPASS_STATUS_MAP),
+    _enum_sensor("frost_status", "Frost Status", FROST_STATUS_MAP),
     # ── CO2 sensors ───────────────────────────────────────────────────
     BrinkFlairSensorEntityDescription(
         key="co2_sensor_1_value",
@@ -244,26 +260,10 @@ SENSOR_DESCRIPTIONS: tuple[BrinkFlairSensorEntityDescription, ...] = (
         native_unit_of_measurement="ppm",
         value_fn=lambda d: d.get("co2_sensor_4_value"),
     ),
-    BrinkFlairSensorEntityDescription(
-        key="co2_sensor_1_status",
-        name="CO2 Sensor 1 Status",
-        value_fn=lambda d: d.get("co2_sensor_1_status"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="co2_sensor_2_status",
-        name="CO2 Sensor 2 Status",
-        value_fn=lambda d: d.get("co2_sensor_2_status"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="co2_sensor_3_status",
-        name="CO2 Sensor 3 Status",
-        value_fn=lambda d: d.get("co2_sensor_3_status"),
-    ),
-    BrinkFlairSensorEntityDescription(
-        key="co2_sensor_4_status",
-        name="CO2 Sensor 4 Status",
-        value_fn=lambda d: d.get("co2_sensor_4_status"),
-    ),
+    _enum_sensor("co2_sensor_1_status", "CO2 Sensor 1 Status", CO2_STATUS_MAP, "co2_status"),
+    _enum_sensor("co2_sensor_2_status", "CO2 Sensor 2 Status", CO2_STATUS_MAP, "co2_status"),
+    _enum_sensor("co2_sensor_3_status", "CO2 Sensor 3 Status", CO2_STATUS_MAP, "co2_status"),
+    _enum_sensor("co2_sensor_4_status", "CO2 Sensor 4 Status", CO2_STATUS_MAP, "co2_status"),
 )
 
 

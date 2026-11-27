@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit Brink Flair verbinden",
+        "data": {
+          "serial_port": "Serielle Schnittstelle",
+          "baud_rate": "Baudrate",
+          "slave_id": "Modbus-Slave-Adresse"
+        },
+        "data_description": {
+          "serial_port": "Serielle Schnittstelle des RS-485-Adapters (z. B. /dev/ttyUSB0). Werkseinstellung: Slave-Adresse 20, Baudrate 19200.",
+          "baud_rate": "Muss mit Menü 14.3 am Gerät übereinstimmen (Werkseinstellung: 19200).",
+          "slave_id": "Muss mit Menü 14.2 am Gerät übereinstimmen (Werkseinstellung: 20)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen — serielle Schnittstelle, Verkabelung und Slave-Adresse prüfen",
+      "unknown": "Unerwarteter Fehler — Home Assistant-Protokolle prüfen"
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits eingerichtet"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_function": {
+        "state": {
+          "standby": "Standby",
+          "bootloader": "Bootloader",
+          "non_blocking_error": "Nicht blockierender Fehler",
+          "blocking_error": "Blockierender Fehler",
+          "manual": "Manuell",
+          "holiday": "Abwesend",
+          "night_ventilation": "Nachtlüftung",
+          "party": "Party",
+          "bypass_boost": "Bypass-Boost",
+          "normal_boost": "Boost",
+          "auto_co2": "Auto (CO2)",
+          "auto_ebus": "Auto (eBus)",
+          "auto_modbus": "Auto (Modbus)",
+          "auto_lan_portal": "Auto (LAN/WLAN-Portal)",
+          "auto_lan_local": "Auto (LAN/WLAN lokal)"
+        }
+      },
+      "ventilation_mode": {
+        "state": {
+          "holiday": "Abwesend",
+          "low": "Niedrig",
+          "normal": "Normal",
+          "high": "Hoch",
+          "auto": "Auto"
+        }
+      },
+      "bypass_status": {
+        "state": {
+          "initialize": "Initialisierung",
+          "opening": "Öffnet",
+          "closing": "Schließt",
+          "open": "Offen",
+          "closed": "Geschlossen"
+        }
+      },
+      "frost_status": {
+        "state": {
+          "initialize": "Initialisierung",
+          "power_up_delay": "Einschaltverzögerung",
+          "no_frost": "Kein Frost",
+          "no_frost_delay": "Kein Frost (Verzögerung)",
+          "frost_control_start_delay": "Startverzögerung Frostschutz",
+          "wait_for_icing": "Warten auf Vereisung",
+          "ice_detected_delay": "Eis erkannt (Verzögerung)",
+          "heating": "Vorheizen",
+          "wait_for_free_heater": "Warten auf Vorheizregister",
+          "fan_control_start_delay": "Startverzögerung Ventilatorregelung",
+          "fan_control_wait_delay": "Warteverzögerung Ventilatorregelung",
+          "fan_control": "Ventilatorregelung",
+          "fan_off_delay": "Verzögerung Ventilator aus",
+          "fan_off": "Ventilator aus",
+          "fan_restarting": "Ventilator startet neu",
+          "error": "Fehler",
+          "test_mode": "Testmodus"
+        }
+      },
+      "co2_status": {
+        "state": {
+          "error": "Fehler",
+          "not_initialized": "Nicht initialisiert",
+          "idle": "Inaktiv",
+          "warming_up": "Aufwärmen",
+          "running": "In Betrieb",
+          "calibrating": "Kalibrierung",
+          "self_test": "Selbsttest"
+        }
+      }
+    },
+    "select": {
+      "ventilation_step": {
+        "state": {
+          "holiday": "Abwesend",
+          "low": "Niedrig",
+          "normal": "Normal",
+          "high": "Hoch"
+        }
+      },
+      "bypass_mode": {
+        "state": {
+          "auto": "Automatisch",
+          "closed": "Geschlossen",
+          "open": "Offen"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "flow_preset_out_of_range": {
+      "message": "Luftmenge {value} m³/h liegt außerhalb des Bereichs. Zulässig: {minimum}–{maximum} m³/h (die Stufe Abwesend darf auch 0 sein)."
+    },
+    "flow_preset_order": {
+      "message": "Luftmenge {value} m³/h würde die Reihenfolge der Stufen verletzen. Sie muss zwischen {lower} und {upper} m³/h liegen (Abwesend ≤ Niedrig ≤ Normal ≤ Hoch)."
+    }
+  }
+}

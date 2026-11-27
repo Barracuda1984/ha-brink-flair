@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à Brink Flair",
+        "data": {
+          "serial_port": "Port série",
+          "baud_rate": "Débit en bauds",
+          "slave_id": "Adresse esclave Modbus"
+        },
+        "data_description": {
+          "serial_port": "Port série de l'adaptateur RS-485 (p. ex. /dev/ttyUSB0). Réglage d'usine : adresse esclave 20, débit 19200 bauds.",
+          "baud_rate": "Doit correspondre au menu 14.3 de l'appareil (réglage d'usine : 19200).",
+          "slave_id": "Doit correspondre au menu 14.2 de l'appareil (réglage d'usine : 20)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion — vérifiez le port série, le câblage et l'adresse esclave",
+      "unknown": "Erreur inattendue — consultez les journaux de Home Assistant"
+    },
+    "abort": {
+      "already_configured": "L'appareil est déjà configuré"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_function": {
+        "state": {
+          "standby": "Veille",
+          "bootloader": "Bootloader",
+          "non_blocking_error": "Erreur non bloquante",
+          "blocking_error": "Erreur bloquante",
+          "manual": "Manuel",
+          "holiday": "Absence",
+          "night_ventilation": "Ventilation nocturne",
+          "party": "Fête",
+          "bypass_boost": "Bypass boost",
+          "normal_boost": "Boost",
+          "auto_co2": "Auto (CO2)",
+          "auto_ebus": "Auto (eBus)",
+          "auto_modbus": "Auto (Modbus)",
+          "auto_lan_portal": "Auto (portail LAN/WLAN)",
+          "auto_lan_local": "Auto (LAN/WLAN local)"
+        }
+      },
+      "ventilation_mode": {
+        "state": {
+          "holiday": "Absence",
+          "low": "Faible",
+          "normal": "Normal",
+          "high": "Élevé",
+          "auto": "Auto"
+        }
+      },
+      "bypass_status": {
+        "state": {
+          "initialize": "Initialisation",
+          "opening": "Ouverture",
+          "closing": "Fermeture",
+          "open": "Ouvert",
+          "closed": "Fermé"
+        }
+      },
+      "frost_status": {
+        "state": {
+          "initialize": "Initialisation",
+          "power_up_delay": "Délai de démarrage",
+          "no_frost": "Pas de gel",
+          "no_frost_delay": "Pas de gel (délai)",
+          "frost_control_start_delay": "Délai de démarrage antigel",
+          "wait_for_icing": "Attente de givrage",
+          "ice_detected_delay": "Givre détecté (délai)",
+          "heating": "Préchauffage",
+          "wait_for_free_heater": "Attente du préchauffeur",
+          "fan_control_start_delay": "Délai de démarrage régulation ventilateur",
+          "fan_control_wait_delay": "Délai d'attente régulation ventilateur",
+          "fan_control": "Régulation ventilateur",
+          "fan_off_delay": "Délai arrêt ventilateur",
+          "fan_off": "Ventilateur arrêté",
+          "fan_restarting": "Redémarrage du ventilateur",
+          "error": "Erreur",
+          "test_mode": "Mode test"
+        }
+      },
+      "co2_status": {
+        "state": {
+          "error": "Erreur",
+          "not_initialized": "Non initialisé",
+          "idle": "Inactif",
+          "warming_up": "Préchauffage",
+          "running": "En fonctionnement",
+          "calibrating": "Étalonnage",
+          "self_test": "Autotest"
+        }
+      }
+    },
+    "select": {
+      "ventilation_step": {
+        "state": {
+          "holiday": "Absence",
+          "low": "Faible",
+          "normal": "Normal",
+          "high": "Élevé"
+        }
+      },
+      "bypass_mode": {
+        "state": {
+          "auto": "Automatique",
+          "closed": "Fermé",
+          "open": "Ouvert"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "flow_preset_out_of_range": {
+      "message": "Le débit d'air de {value} m³/h est hors plage. Autorisé : {minimum}–{maximum} m³/h (le niveau Absence peut aussi être 0)."
+    },
+    "flow_preset_order": {
+      "message": "Le débit d'air de {value} m³/h romprait l'ordre des niveaux. Il doit être compris entre {lower} et {upper} m³/h (absence ≤ faible ≤ normal ≤ élevé)."
+    }
+  }
+}

@@ -187,5 +187,11 @@ CO2_STATUS_MAP: dict[int, str] = {
 }
 
 # Options for select entities
+# Flow presets 6000–6003 (Brink "Instelwaarden" 1.1–1.4): preset 0 is 0 or
+# FLOW_PRESET_MIN..max, presets 1–3 are FLOW_PRESET_MIN..max, and the presets
+# must be ascending (0 ≤ 1 ≤ 2 ≤ 3). The maximum depends on the model.
+FLOW_PRESET_MIN = 50
+FLOW_PRESET_MAX = 400  # Flair 400
+
 VENTILATION_STEP_OPTIONS = ["holiday", "low", "normal", "high"]
 BYPASS_MODE_OPTIONS = ["auto", "closed", "open"]

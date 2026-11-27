@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met Brink Flair",
+        "data": {
+          "serial_port": "Seriële poort",
+          "baud_rate": "Baudrate",
+          "slave_id": "Modbus slave-adres"
+        },
+        "data_description": {
+          "serial_port": "Seriële poort van de RS-485-adapter (bijv. /dev/ttyUSB0). Fabrieksinstelling: slave-adres 20, baudrate 19200.",
+          "baud_rate": "Moet overeenkomen met menu 14.3 van het toestel (fabrieksinstelling: 19200).",
+          "slave_id": "Moet overeenkomen met menu 14.2 van het toestel (fabrieksinstelling: 20)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinding mislukt — controleer de seriële poort, de bedrading en het slave-adres",
+      "unknown": "Onverwachte fout — controleer de Home Assistant-logboeken"
+    },
+    "abort": {
+      "already_configured": "Dit toestel is al geconfigureerd"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_function": {
+        "state": {
+          "standby": "Stand-by",
+          "bootloader": "Bootloader",
+          "non_blocking_error": "Niet-blokkerende storing",
+          "blocking_error": "Blokkerende storing",
+          "manual": "Handmatig",
+          "holiday": "Afwezig",
+          "night_ventilation": "Nachtventilatie",
+          "party": "Party",
+          "bypass_boost": "Bypass boost",
+          "normal_boost": "Boost",
+          "auto_co2": "Auto (CO2)",
+          "auto_ebus": "Auto (eBus)",
+          "auto_modbus": "Auto (Modbus)",
+          "auto_lan_portal": "Auto (LAN/WLAN-portaal)",
+          "auto_lan_local": "Auto (LAN/WLAN lokaal)"
+        }
+      },
+      "ventilation_mode": {
+        "state": {
+          "holiday": "Afwezig",
+          "low": "Laag",
+          "normal": "Normaal",
+          "high": "Hoog",
+          "auto": "Auto"
+        }
+      },
+      "bypass_status": {
+        "state": {
+          "initialize": "Initialiseren",
+          "opening": "Opent",
+          "closing": "Sluit",
+          "open": "Open",
+          "closed": "Gesloten"
+        }
+      },
+      "frost_status": {
+        "state": {
+          "initialize": "Initialiseren",
+          "power_up_delay": "Opstartvertraging",
+          "no_frost": "Geen vorst",
+          "no_frost_delay": "Geen vorst (vertraging)",
+          "frost_control_start_delay": "Startvertraging vorstregeling",
+          "wait_for_icing": "Wachten op ijsvorming",
+          "ice_detected_delay": "IJs gedetecteerd (vertraging)",
+          "heating": "Voorverwarmen",
+          "wait_for_free_heater": "Wachten op voorverwarmer",
+          "fan_control_start_delay": "Startvertraging ventilatorregeling",
+          "fan_control_wait_delay": "Wachtvertraging ventilatorregeling",
+          "fan_control": "Ventilatorregeling",
+          "fan_off_delay": "Vertraging ventilator uit",
+          "fan_off": "Ventilator uit",
+          "fan_restarting": "Ventilator herstart",
+          "error": "Storing",
+          "test_mode": "Testmodus"
+        }
+      },
+      "co2_status": {
+        "state": {
+          "error": "Storing",
+          "not_initialized": "Niet geïnitialiseerd",
+          "idle": "Inactief",
+          "warming_up": "Opwarmen",
+          "running": "Actief",
+          "calibrating": "Kalibreren",
+          "self_test": "Zelftest"
+        }
+      }
+    },
+    "select": {
+      "ventilation_step": {
+        "state": {
+          "holiday": "Afwezig",
+          "low": "Laag",
+          "normal": "Normaal",
+          "high": "Hoog"
+        }
+      },
+      "bypass_mode": {
+        "state": {
+          "auto": "Automatisch",
+          "closed": "Bypass dicht",
+          "open": "Bypass open"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "flow_preset_out_of_range": {
+      "message": "Luchtdebiet {value} m³/h valt buiten het bereik. Toegestaan: {minimum}–{maximum} m³/h (stand 0 mag ook 0 zijn)."
+    },
+    "flow_preset_order": {
+      "message": "Luchtdebiet {value} m³/h verstoort de volgorde van de standen. Het moet tussen {lower} en {upper} m³/h liggen (afwezig ≤ laag ≤ normaal ≤ hoog)."
+    }
+  }
+}

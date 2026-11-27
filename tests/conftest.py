@@ -119,8 +119,8 @@ DEFAULT_INPUT_REGISTERS: dict[int, int] = {
     4100: 0,                                  # filter not dirty
     4113: 0, 4114: 720,                       # operating time 720 h (32-bit)
     4115: 720,                                # filter hours
-    # 4200..4207: CO2 sensors 1–4 (status, value)
-    4200: 0, 4201: 0, 4202: 0, 4203: 0, 4204: 0, 4205: 0, 4206: 0, 4207: 0,
+    # 4200..4207: CO2 sensors 1–4 (status, value) — 1, 2 running; 3, 4 not fitted
+    4200: 4, 4201: 430, 4202: 4, 4203: 650, 4204: 1, 4205: 0, 4206: 1, 4207: 0,
 }
 
 # Raw FC03 holding-register values

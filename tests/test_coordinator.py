@@ -71,10 +71,37 @@ async def test_imbalance_signed(hass):
     assert data["imbalance_exhaust"] == 3
 
 
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [(85, 8.5), (65536 - 150, -15.0), (9999, None), (1500, None)],
+)
+async def test_ntc_not_connected(hass, raw, expected):
+    """NTC 9999 (999.9 °C, sensor not fitted) and out-of-range values become None."""
+    data = await _fetch(hass, {4081: raw, 4082: raw})
+    assert data["outside_temperature"] == expected
+    assert data["ntc2_temperature"] == expected
+
+
+@pytest.mark.parametrize(("raw", "expected"), [(0, None), (45, 45)])
+async def test_rht_not_connected(hass, raw, expected):
+    """RHT humidity 0 % means no sensor is fitted."""
+    data = await _fetch(hass, {4083: raw})
+    assert data["rht_humidity"] == expected
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"), [(4, 650), (3, 650), (1, None), (0, None)]
+)
+async def test_co2_value_depends_on_status(hass, status, expected):
+    """CO2 value is None when the sensor is not initialized or in error."""
+    data = await _fetch(hass, {4200: status, 4201: 650})
+    assert data["co2_sensor_1_value"] == expected
+
+
 async def test_co2_values_decoded(hass):
     """CO2 sensor values and thresholds are read from 4200.. / 6150.."""
     data = await _fetch(
-        hass, {4201: 650, 4207: 900}, holding_overrides={6150: 1, 6157: 500, 6158: 1200}
+        hass, {4200: 4, 4201: 650, 4206: 4, 4207: 900}, holding_overrides={6150: 1, 6157: 500, 6158: 1200}
     )
     assert data["co2_sensor_1_value"] == 650
     assert data["co2_sensor_4_value"] == 900
@@ -237,3 +264,44 @@ async def test_write_closes_client_on_error(hass):
         await coord.async_set_ventilation_step(1)
 
     client.close.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Flow preset validation (Brink "Instelwaarden" 1.1–1.4)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("index", "value", "error"),
+    [
+        (0, 0, None),                              # holiday may be 0
+        (0, 50, None),
+        (0, 25, "flow_preset_out_of_range"),       # 1–49 rejected
+        (1, 0, "flow_preset_out_of_range"),        # only holiday may be 0
+        (1, 40, "flow_preset_out_of_range"),
+        (3, 405, "flow_preset_out_of_range"),      # above Flair 400 maximum
+        (2, 210, None),                            # 150 ≤ 210 ≤ 300
+        (2, 140, "flow_preset_order"),             # below low (150)
+        (2, 310, "flow_preset_order"),             # above high (300)
+        (0, 160, "flow_preset_order"),             # above low (150)
+        (3, 400, None),
+    ],
+)
+async def test_flow_preset_validation(hass, index, value, error):
+    """Out-of-range or out-of-order presets raise before anything is written."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    coord._client = client
+    coord.async_request_refresh = AsyncMock()
+    coord.data = await coord._fetch_data()   # presets 75 / 150 / 200 / 300
+
+    if error is None:
+        await coord.async_set_flow_preset(index, value)
+        client.write_register.assert_awaited_once()
+    else:
+        with pytest.raises(ServiceValidationError) as exc:
+            await coord.async_set_flow_preset(index, value)
+        assert exc.value.translation_key == error
+        client.write_register.assert_not_awaited()
