@@ -159,40 +159,29 @@ async def test_fetch_data_closes_client_on_modbus_error(hass):
     client.close.assert_called_once()
 
 
-async def test_initialize_writes_modbus_control_register(hass):
-    """async_initialize() must write 1 to register 8000."""
-    from custom_components.brink_flair.const import REG_RC_MODBUS_CONTROL
-
+async def test_initialize_writes_nothing(hass):
+    """async_initialize() is read-only — setup must not write to the unit."""
     coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
-    client = MagicMock()
-    client.connected = False
-    client.connect = AsyncMock(side_effect=lambda: setattr(client, "connected", True))
-    client.write_register = AsyncMock(
-        return_value=MagicMock(isError=lambda: False)
-    )
+    client = make_fake_client(holding_overrides={8000: 0})
     coord._client = client
 
     await coord.async_initialize()
 
-    client.write_register.assert_awaited_once_with(
-        address=REG_RC_MODBUS_CONTROL, value=1, device_id=20
-    )
+    client.write_register.assert_not_awaited()
+    assert client.holding_registers[8000] == 0
 
 
-async def test_initialize_closes_on_modbus_error(hass):
-    """async_initialize() closes the connection on ModbusException (non-fatal)."""
+async def test_initialize_closes_on_read_error(hass):
+    """A failed version read closes the connection and is not fatal."""
     coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
     client = make_fake_client()
-    client.write_register = AsyncMock(side_effect=ModbusException("fail"))
+    client.read_input_registers = AsyncMock(side_effect=ModbusException("fail"))
     coord._client = client
 
-    # Should not raise — errors are logged and swallowed
     await coord.async_initialize()
 
     client.close.assert_called_once()
-    # The version read afterwards reconnects and still succeeds
-    assert client.connect.await_count == 2
-    assert coord.sw_version is not None
+    assert coord.sw_version is None
 
 
 async def test_initialize_reads_device_version(hass):
@@ -251,6 +240,87 @@ async def test_write_helpers(hass, method, args, expected):
     ] == expected
     assert all(c.kwargs["device_id"] == 20 for c in client.write_register.await_args_list)
     coord.async_request_refresh.assert_awaited()
+
+
+# ---------------------------------------------------------------------------
+# Modbus control (8000) is taken on demand and handed back on unload
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("method", "args", "command"),
+    [
+        ("async_set_ventilation_step", (3,), (8001, 3)),
+        ("async_set_standby", (True,), (8003, 1)),
+    ],
+)
+@pytest.mark.parametrize(
+    ("mode", "takes_control"),
+    [("device_lcd", True), ("modbus_switch", False), ("modbus_flow", False)],
+)
+async def test_modbus_control_taken_only_when_needed(
+    hass, method, args, command, mode, takes_control
+):
+    """8000 = 1 is written right before the command, only in device LCD mode."""
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    coord._client = client
+    coord.async_request_refresh = AsyncMock()
+    coord.data = {"modbus_control_mode": mode}
+
+    await getattr(coord, method)(*args)
+
+    writes = [
+        (c.kwargs["address"], c.kwargs["value"]) for c in client.write_register.await_args_list
+    ]
+    assert writes == ([(8000, 1)] if takes_control else []) + [command]
+
+
+@pytest.mark.parametrize(
+    "method", ["async_set_bypass_mode", "async_set_filter_change_days", "async_filter_reset"]
+)
+async def test_settings_writes_do_not_take_modbus_control(hass, method):
+    """Writes that do not need Modbus control leave register 8000 alone."""
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    coord._client = client
+    coord.async_request_refresh = AsyncMock()
+    coord.data = {"modbus_control_mode": "device_lcd"}
+
+    await getattr(coord, method)(*(() if method == "async_filter_reset" else (1,)))
+
+    assert 8000 not in [c.kwargs["address"] for c in client.write_register.await_args_list]
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [("modbus_switch", [(8000, 0)]), ("device_lcd", []), ("modbus_flow", [])],
+)
+async def test_release_modbus_control(hass, mode, expected):
+    """Unloading hands control back (8000 = 0) only if the unit is in Modbus switch mode."""
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    coord._client = client
+    coord.data = {"modbus_control_mode": mode}
+
+    await coord.async_release_modbus_control()
+
+    assert [
+        (c.kwargs["address"], c.kwargs["value"]) for c in client.write_register.await_args_list
+    ] == expected
+
+
+async def test_release_modbus_control_error_is_not_fatal(hass):
+    """A failed hand-back is logged, not raised, so unloading still succeeds."""
+    coord = BrinkFlairCoordinator(hass, "/dev/ttyUSB0", 19200, 20)
+    client = make_fake_client()
+    client.write_register = AsyncMock(side_effect=ModbusException("fail"))
+    coord._client = client
+    coord.data = {"modbus_control_mode": "modbus_switch"}
+
+    await coord.async_release_modbus_control()
+
+    client.close.assert_called_once()
 
 
 async def test_write_closes_client_on_error(hass):

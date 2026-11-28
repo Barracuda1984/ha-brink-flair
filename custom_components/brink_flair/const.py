@@ -103,8 +103,10 @@ REG_H_CO2_SENSOR_4_HIGH = 6158
 
 # ---------------------------------------------------------------------------
 # Remote control registers (FC 0x03 read / 0x06 write) — commands, 8000–8011
-# NOTE: Register 8000 must be written to 1 on every HA startup (Modbus switch
-#       control mode). The device resets to 0 (device LCD) after power loss.
+# NOTE: Ventilation step (8001) and standby (8003) need 8000 = 1 (Modbus switch
+#       control). The integration writes it only right before such a command,
+#       when the unit is in device LCD mode (also after a power loss), and
+#       writes 0 when the config entry is unloaded. Nothing is written at setup.
 # ---------------------------------------------------------------------------
 REG_RC_MODBUS_CONTROL = 8000   # 0=device LCD, 1=modbus switch, 2=modbus flow
 REG_RC_VENTILATION_STEP = 8001 # 0=holiday, 1=low, 2=normal, 3=high
@@ -112,6 +114,9 @@ REG_RC_FLOW_RATE = 8002        # m³/h (requires REG_RC_MODBUS_CONTROL=2)
 REG_RC_STANDBY = 8003          # 0=no action, 1=standby, 2=normal mode
 REG_RC_FILTER_RESET = 8010     # write 1 to reset filter warning
 REG_RC_APPLIANCE_RESET = 8011  # write 1 to reset appliance
+
+MODBUS_CONTROL_DEVICE = 0      # 8000: unit's own control (display, wall switch, CO2)
+MODBUS_CONTROL_SWITCH = 1      # 8000: Modbus switch control (8001 step, 8003 standby)
 
 # ---------------------------------------------------------------------------
 # Value maps
