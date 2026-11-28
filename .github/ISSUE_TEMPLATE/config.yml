@@ -3,6 +3,9 @@ contact_links:
   - name: Question / help with setup
     url: https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/q-a
     about: Wiring, RS-485 adapters, configuration — ask in Discussions (Q&A).
+  - name: Does it work with your model?
+    url: https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/compatibility
+    about: Share your Brink model, board and adapter in Discussions (Compatibility). For a structured report use "Working model report" above.
   - name: Ideas and feature requests
     url: https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/ideas
     about: Suggest new sensors, controls or features in Discussions (Ideas).
