@@ -119,7 +119,9 @@ Or manually:
 | Baud rate | Must match device menu 14.3 | `19200` |
 | Modbus slave address | Must match device menu 14.2 | `20` |
 
-> On every HA startup the integration writes register 8000 = 1 to enable Modbus switch-control mode. The device resets this to 0 on power loss.
+> **Modbus control (register 8000).** Setting up the integration only reads from the unit, so the wall switch and the unit's own CO2 control keep working. The unit accepts the **Ventilation Mode** and **Standby** commands only in Modbus control mode, so right before such a command the integration switches it over (register 8000 = 1) if it is not already. It does this again after a power loss, which resets the unit to its own control. Other settings (flow presets, bypass, frost, filter) are written without taking control.
+>
+> To hand control back to the unit, reload or remove the integration (**Settings → Devices & services → Brink Flair → ⋮ → Reload**); unloading writes register 8000 = 0.
 
 ## Entities
 
@@ -312,7 +314,7 @@ Go to **Settings → Devices & services → Brink Flair**, open the device and c
 ## Known limitations
 
 - **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400 with firmware S3.01.05, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
-- On every start the integration switches the unit to Modbus control (register 8000 = 1), so the wall switch and the unit's own CO2-based control are overridden while Home Assistant is running.
+- After you change **Ventilation Mode** or **Standby** from Home Assistant, the unit stays under Modbus control: the wall switch and the unit's own CO2-based control are overridden until the integration is reloaded or the unit loses power. See [Configuration](#configuration).
 - Optional sensors (NTC2, RHT humidity, CO2 1–4) show as *unknown* when they are not fitted.
 
 ## Credits
