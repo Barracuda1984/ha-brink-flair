@@ -22,7 +22,9 @@ from .const import (
     FLOW_PRESET_MAX,
     FLOW_PRESET_MIN,
     FROST_STATUS_MAP,
+    MODBUS_CONTROL_DEVICE,
     MODBUS_CONTROL_MAP,
+    MODBUS_CONTROL_SWITCH,
     REG_H_BYPASS_BOOST,
     REG_H_BYPASS_BOOST_POSITION,
     REG_H_BYPASS_HYSTERESIS,
@@ -191,9 +193,15 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self._client.connect()
 
     async def async_shutdown(self) -> None:
-        """Close the persistent Modbus connection on integration unload."""
-        self._client.close()
-        _LOGGER.debug("Modbus connection closed")
+        """Stop polling and close the Modbus connection on integration unload.
+
+        Home Assistant also calls this when the config entry unloads, so it
+        must be safe to run twice.
+        """
+        await super().async_shutdown()
+        if self._client.connected:
+            self._client.close()
+            _LOGGER.debug("Modbus connection closed")
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -213,21 +221,12 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     # ------------------------------------------------------------------
 
     async def async_initialize(self) -> None:
-        """Write register 8000 = 1 (Modbus switch-control mode).
+        """Read the device version and serial number for DeviceInfo.
 
-        The Brink device resets to 'Device LCD' mode (8000 = 0) after any
-        power loss, which prevents HA from controlling ventilation steps.
-        Must be called once at HA startup before the first data fetch.
+        Read-only: nothing is written to the unit during setup. Modbus control
+        (register 8000) is taken only when the user sends a command that needs
+        it, see _async_ensure_modbus_control().
         """
-        await self._ensure_connected()
-        try:
-            await self._client.write_register(
-                address=REG_RC_MODBUS_CONTROL, value=1, device_id=self.slave_id
-            )
-            _LOGGER.debug("Modbus control mode set to 'switch' (8000=1)")
-        except ModbusException as err:
-            _LOGGER.warning("Could not set Modbus control mode: %s", err)
-            self._client.close()
         await self._async_read_device_version()
 
     async def _async_read_device_version(self) -> None:
@@ -440,6 +439,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_ventilation_step(self, step: int) -> None:
         """Set ventilation step via register 8001 (0=holiday … 3=high)."""
+        await self._async_ensure_modbus_control()
         await self._write_register(REG_RC_VENTILATION_STEP, step)
 
     async def async_set_bypass_mode(self, mode: int) -> None:
@@ -518,6 +518,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_standby(self, standby: bool) -> None:
         """Set standby (True) or resume normal mode (False) via register 8003."""
+        await self._async_ensure_modbus_control()
         await self._write_register(REG_RC_STANDBY, 1 if standby else 2)
 
     async def async_set_imbalance_supply(self, value: int) -> None:
@@ -542,7 +543,45 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._write_register(base, low)
         await self._write_register(base + 1, high)
 
-    async def _write_register(self, address: int, value: int) -> None:
+    # ------------------------------------------------------------------
+    # Modbus control (register 8000)
+    # ------------------------------------------------------------------
+
+    async def _async_ensure_modbus_control(self) -> None:
+        """Switch the unit to Modbus control right before a command needs it.
+
+        Ventilation step (8001) and standby (8003) are ignored by the unit
+        unless register 8000 = 1. Write it only when the last poll shows the
+        unit under its own control (device_lcd) — this also covers the unit
+        resetting 8000 to 0 after a power loss.
+
+        Note: a step chosen manually on the unit's display (active function
+        "manual") holds that step; the unit runs at the higher of the manual
+        and the Modbus step, so a lower Modbus step has no visible effect until
+        the manual choice is lowered on the display.
+        """
+        if (self.data or {}).get("modbus_control_mode") != "device_lcd":
+            return
+        await self._write_raw(REG_RC_MODBUS_CONTROL, MODBUS_CONTROL_SWITCH)
+        _LOGGER.debug("Modbus control taken (8000=1)")
+
+    async def async_release_modbus_control(self) -> None:
+        """Hand control back to the unit (8000 = 0) when the entry is unloaded.
+
+        Only when the last poll shows Modbus switch control; best effort, a
+        failure is logged and does not block unloading.
+        """
+        if (self.data or {}).get("modbus_control_mode") != "modbus_switch":
+            return
+        try:
+            await self._write_raw(REG_RC_MODBUS_CONTROL, MODBUS_CONTROL_DEVICE)
+            _LOGGER.debug("Modbus control handed back to the unit (8000=0)")
+        except Exception as err:  # noqa: BLE001 - unloading must not fail
+            _LOGGER.warning("Could not hand control back to the unit: %s", err)
+
+    async def _write_raw(self, address: int, value: int) -> None:
+        """Write one register without refreshing; close the client on error."""
+        _LOGGER.debug("Writing register %s = %s", address, value)
         await self._ensure_connected()
         try:
             await self._client.write_register(
@@ -551,4 +590,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception:
             self._client.close()
             raise
+
+    async def _write_register(self, address: int, value: int) -> None:
+        await self._write_raw(address, value)
         await self.async_request_refresh()

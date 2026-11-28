@@ -30,8 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         baud_rate=entry.data[CONF_BAUD_RATE],
         slave_id=entry.data[CONF_SLAVE_ID],
     )
-    # Enable Modbus switch-control mode before the first data fetch.
-    # The device resets this on power loss so we must do it every startup.
+    # Read-only: device version/serial for DeviceInfo. Nothing is written to the
+    # unit during setup — Modbus control is taken on the first command needing it.
     await coordinator.async_initialize()
     await coordinator.async_config_entry_first_refresh()
 
@@ -45,5 +45,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         coordinator: BrinkFlairCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.async_release_modbus_control()
         await coordinator.async_shutdown()
     return unload_ok

@@ -29,14 +29,14 @@ Key addresses (see `const.py` for the full map):
 - **6000–6003** flow presets / **6035/6036** imbalance offsets (signed %) / **6100–6105** bypass config incl. boost + boost position / **6110–6111** frost config / **6120** filter days / **6150** CO2 mode / **6151–6158** CO2 low/high thresholds
 - **8000** Modbus control mode / **8001** ventilation step / **8003** standby (1 = standby, 2 = normal) / **8010** filter reset / **8011** appliance reset
 
-**Critical startup requirement**: register 8000 must be written to `1` ("Modbus switch" mode) on every HA start. The device resets it to `0` ("Device LCD") after power loss. This is done in `coordinator.async_initialize()`, called from `async_setup_entry` before the first data fetch; it also reads the device version/serial for `DeviceInfo`.
+**Modbus control (register 8000)**: ventilation step (8001) and standby (8003) only work when 8000 = `1` ("Modbus switch"); the unit resets it to `0` ("Device LCD") after power loss. **Never write to the unit during setup** (HACS review requirement). `_async_ensure_modbus_control()` writes 8000 = 1 right before those two commands, and only when the polled `modbus_control_mode` is `device_lcd`. A step chosen manually on the unit's display (active function `manual`) holds: the unit runs at the higher of the manual and the Modbus step, so a lower 8001 has no visible effect — this is firmware behaviour (it overrides CO2 control too), not a failed write; do not add retries for it. `async_release_modbus_control()` writes 8000 = 0 on unload when the mode is `modbus_switch`. `async_initialize()` is read-only: it reads the device version/serial for `DeviceInfo`.
 
 ## Architecture
 
 Follows the standard HA `DataUpdateCoordinator` pattern:
 
 - **`coordinator.py`** — `BrinkFlairCoordinator` keeps a persistent `AsyncModbusSerialClient` (closed on any error, reconnected via `_ensure_connected()`), reads all monitored data in 18 Modbus transactions per poll cycle, exposes it as a flat `dict`, and provides async write helpers (`async_set_ventilation_step`, `async_set_bypass_mode`, `async_set_standby`, `async_set_co2_threshold`, …). Each write helper calls `_write_register()` then `async_request_refresh()`.
-- **`__init__.py`** — calls `coordinator.async_initialize()` then `coordinator.async_config_entry_first_refresh()`, stores coordinator in `hass.data[DOMAIN][entry_id]`, forwards to all platforms.
+- **`__init__.py`** — calls `coordinator.async_initialize()` (read-only) then `coordinator.async_config_entry_first_refresh()`, stores coordinator in `hass.data[DOMAIN][entry_id]`, forwards to all platforms. On unload it calls `async_release_modbus_control()` before closing the connection.
 - **`config_flow.py`** — collects serial port, baud rate, slave ID; tests by reading FC04 register 4020 before saving.
 - **`sensor.py`** — declarative `BrinkFlairSensorEntityDescription` (adds `value_fn`) covers 31 sensors (incl. 4× CO2 value + 4× CO2 status). Text status sensors are built with `_enum_sensor()`: `SensorDeviceClass.ENUM`, `options` from the `*_MAP` in `const.py`, states translated via `entity.sensor.<translation_key>.state` in `strings.json` / `translations/*.json` (en, cs, nl, de, fr). When adding a value to a map, add its translation to `strings.json` and every translation file — `tests/test_sensor.py` enforces this.
 - **`binary_sensor.py`** — `FilterDirtyBinarySensor` reads `data["filter_dirty"]` (register 4100).
@@ -92,7 +92,7 @@ pytest --cov
 
 ```
 custom_components/brink_flair/
-  __init__.py        # entry setup/unload — calls async_initialize() before first refresh
+  __init__.py        # entry setup (read-only) / unload (hands Modbus control back)
   manifest.json      # requires pymodbus>=3.10.0,<4 (range, not a pin — HA core constrains pymodbus)
   config_flow.py     # UI wizard: serial port, baud rate, slave ID (default 20)
   const.py           # all register addresses, value maps, framing constants
