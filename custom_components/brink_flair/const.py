@@ -117,8 +117,6 @@ REG_RC_APPLIANCE_RESET = 8011  # write 1 to reset appliance
 
 MODBUS_CONTROL_DEVICE = 0      # 8000: unit's own control (display, wall switch, CO2)
 MODBUS_CONTROL_SWITCH = 1      # 8000: Modbus switch control (8001 step, 8003 standby)
-MODBUS_CONTROL_SETTLE = 1.0    # s to wait after taking control before the command
-COMMAND_VERIFY_DELAY = 10      # s after a command before checking the unit applied it
 
 # ---------------------------------------------------------------------------
 # Value maps
