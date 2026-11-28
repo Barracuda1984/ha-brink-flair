@@ -1,7 +1,11 @@
 """DataUpdateCoordinator for Brink Flair."""
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -22,8 +26,10 @@ from .const import (
     FLOW_PRESET_MAX,
     FLOW_PRESET_MIN,
     FROST_STATUS_MAP,
+    COMMAND_VERIFY_DELAY,
     MODBUS_CONTROL_DEVICE,
     MODBUS_CONTROL_MAP,
+    MODBUS_CONTROL_SETTLE,
     MODBUS_CONTROL_SWITCH,
     REG_H_BYPASS_BOOST,
     REG_H_BYPASS_BOOST_POSITION,
@@ -60,6 +66,7 @@ from .const import (
     REG_RC_MODBUS_CONTROL,
     REG_RC_STANDBY,
     REG_RC_VENTILATION_STEP,
+    VENTILATION_STEP_OPTIONS,
     SERIAL_BYTESIZE,
     SERIAL_PARITY,
     SERIAL_STOPBITS,
@@ -147,6 +154,17 @@ def _decode_serial(r0: int, r1: int, r2: int) -> str:
     return digits
 
 
+@dataclass
+class _PendingCommand:
+    """A command sent right after taking Modbus control, checked on a later poll."""
+
+    address: int
+    value: int
+    applied: Callable[[dict[str, Any]], bool]
+    not_before: float
+    retried: bool = False
+
+
 class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Polls a Brink Flair unit via Modbus RTU and exposes data to entities.
 
@@ -168,6 +186,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.sw_version: str | None = None
         self.hw_version: str | None = None
         self.serial_number: str | None = None
+        self._pending: _PendingCommand | None = None
         self._client = AsyncModbusSerialClient(
             port=serial_port,
             baudrate=baud_rate,
@@ -269,11 +288,13 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            return await self._fetch_data()
+            data = await self._fetch_data()
         except ModbusException as err:
             raise UpdateFailed(f"Modbus error: {err}") from err
         except Exception as err:
             raise UpdateFailed(f"Unexpected error: {err}") from err
+        await self._async_verify_pending(data)
+        return data
 
     async def _fetch_data(self) -> dict[str, Any]:
         """Read all monitored registers in batches and return a flat dict."""
@@ -439,8 +460,12 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_ventilation_step(self, step: int) -> None:
         """Set ventilation step via register 8001 (0=holiday … 3=high)."""
-        await self._async_ensure_modbus_control()
-        await self._write_register(REG_RC_VENTILATION_STEP, step)
+        expected = VENTILATION_STEP_OPTIONS[step]
+        await self._async_send_control_command(
+            REG_RC_VENTILATION_STEP,
+            step,
+            lambda data: data.get("ventilation_mode") == expected,
+        )
 
     async def async_set_bypass_mode(self, mode: int) -> None:
         """Set bypass mode via register 6100 (0=auto, 1=closed, 2=open)."""
@@ -518,8 +543,11 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_standby(self, standby: bool) -> None:
         """Set standby (True) or resume normal mode (False) via register 8003."""
-        await self._async_ensure_modbus_control()
-        await self._write_register(REG_RC_STANDBY, 1 if standby else 2)
+        await self._async_send_control_command(
+            REG_RC_STANDBY,
+            1 if standby else 2,
+            lambda data: (data.get("active_function") == "standby") == standby,
+        )
 
     async def async_set_imbalance_supply(self, value: int) -> None:
         """Set supply imbalance offset (% correction, signed, -15..+15)."""
@@ -547,18 +575,94 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     # Modbus control (register 8000)
     # ------------------------------------------------------------------
 
-    async def _async_ensure_modbus_control(self) -> None:
+    async def _async_ensure_modbus_control(self) -> bool:
         """Switch the unit to Modbus control right before a command needs it.
 
         Ventilation step (8001) and standby (8003) are ignored by the unit
         unless register 8000 = 1. Write it only when the last poll shows the
         unit under its own control (device_lcd) — this also covers the unit
-        resetting 8000 to 0 after a power loss.
+        resetting 8000 to 0 after a power loss. Returns True if control was taken.
         """
         if (self.data or {}).get("modbus_control_mode") != "device_lcd":
-            return
+            return False
         await self._write_raw(REG_RC_MODBUS_CONTROL, MODBUS_CONTROL_SWITCH)
-        _LOGGER.debug("Modbus control taken (8000=1)")
+        _LOGGER.debug(
+            "Modbus control taken (8000=1), waiting %.1f s for the unit to switch",
+            MODBUS_CONTROL_SETTLE,
+        )
+        # The unit acknowledges 8000 at once but needs a moment to switch modes.
+        await asyncio.sleep(MODBUS_CONTROL_SETTLE)
+        return True
+
+    async def _async_send_control_command(
+        self,
+        address: int,
+        value: int,
+        applied: Callable[[dict[str, Any]], bool],
+    ) -> None:
+        """Write a command that needs Modbus control.
+
+        If control had to be taken first, the unit may still ignore the command
+        while it switches modes, so the result is checked on the first poll at
+        least COMMAND_VERIFY_DELAY seconds later and the command is resent once.
+        """
+        self._pending = None
+        took_control = await self._async_ensure_modbus_control()
+        if took_control:
+            self._pending = _PendingCommand(
+                address, value, applied, time.monotonic() + COMMAND_VERIFY_DELAY
+            )
+            _LOGGER.debug(
+                "Register %s = %s will be checked on the first poll after %s s",
+                address,
+                value,
+                COMMAND_VERIFY_DELAY,
+            )
+        await self._write_register(address, value)
+
+    async def _async_verify_pending(self, data: dict[str, Any]) -> None:
+        """Resend a command the unit ignored right after taking Modbus control."""
+        pending = self._pending
+        if pending is None:
+            return
+        remaining = pending.not_before - time.monotonic()
+        if remaining > 0:
+            _LOGGER.debug(
+                "Check of register %s = %s postponed, %.0f s left",
+                pending.address,
+                pending.value,
+                remaining,
+            )
+            return
+        if pending.applied(data):
+            _LOGGER.debug(
+                "Unit applied register %s = %s%s",
+                pending.address,
+                pending.value,
+                " after resending" if pending.retried else "",
+            )
+            self._pending = None
+            return
+        if pending.retried:
+            _LOGGER.warning(
+                "Brink Flair did not apply register %s = %s, even after resending it",
+                pending.address,
+                pending.value,
+            )
+            self._pending = None
+            return
+        _LOGGER.debug(
+            "Unit has not applied register %s = %s yet, resending it",
+            pending.address,
+            pending.value,
+        )
+        pending.retried = True
+        pending.not_before = time.monotonic() + COMMAND_VERIFY_DELAY
+        try:
+            await self._write_raw(pending.address, pending.value)
+        except Exception as err:  # noqa: BLE001 - a failed resend must not fail the poll
+            _LOGGER.warning("Could not resend register %s: %s", pending.address, err)
+            self._pending = None
 
     async def async_release_modbus_control(self) -> None:
         """Hand control back to the unit (8000 = 0) when the entry is unloaded.
@@ -576,6 +680,7 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _write_raw(self, address: int, value: int) -> None:
         """Write one register without refreshing; close the client on error."""
+        _LOGGER.debug("Writing register %s = %s", address, value)
         await self._ensure_connected()
         try:
             await self._client.write_register(

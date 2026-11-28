@@ -94,6 +94,14 @@ COORDINATOR_DATA: dict[str, Any] = {
 
 
 @pytest.fixture(autouse=True)
+def no_modbus_control_settle(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Skip the real pause after taking Modbus control."""
+    monkeypatch.setattr(
+        "custom_components.brink_flair.coordinator.MODBUS_CONTROL_SETTLE", 0
+    )
+
+
+@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Allow Home Assistant to load custom_components/brink_flair in every test."""
 
