@@ -7,8 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **The integration no longer writes to the unit during setup.** Earlier versions switched the unit to Modbus control (register 8000 = 1) on every Home Assistant start, which overrode the wall switch and the unit's own CO2 control, even for users who only wanted the sensors. Modbus control is now taken only right before a **Ventilation Mode** or **Standby** command, and only when the unit is under its own control. This also covers the unit resetting register 8000 after a power loss, which previously made those commands silently do nothing until the next restart.
 - Unloading or reloading the integration hands control back to the unit (register 8000 = 0)
-- After taking Modbus control the integration waits 1 s before sending the command, checks on a later poll that the unit applied it (Ventilation Mode / Status), and resends it once if not — the unit can ignore a command sent right after switching to Modbus control
-- Debug log shows every register write and the takeover / check / resend steps
+- Debug log shows every register write and when Modbus control is taken or handed back
 
 > **Upgrading:** a unit set up with an earlier version is still under Modbus control. Reload the integration once (**Settings → Devices & services → Brink Flair → ⋮ → Reload**) to hand control back to the unit.
 
