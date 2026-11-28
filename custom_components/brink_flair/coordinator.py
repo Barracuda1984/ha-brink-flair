@@ -193,9 +193,15 @@ class BrinkFlairCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self._client.connect()
 
     async def async_shutdown(self) -> None:
-        """Close the persistent Modbus connection on integration unload."""
-        self._client.close()
-        _LOGGER.debug("Modbus connection closed")
+        """Stop polling and close the Modbus connection on integration unload.
+
+        Home Assistant also calls this when the config entry unloads, so it
+        must be safe to run twice.
+        """
+        await super().async_shutdown()
+        if self._client.connected:
+            self._client.close()
+            _LOGGER.debug("Modbus connection closed")
 
     @property
     def device_info(self) -> DeviceInfo:
