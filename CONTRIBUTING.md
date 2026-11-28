@@ -10,6 +10,7 @@ Thanks for your interest in improving the Brink Flair integration! Contributions
 ## Questions and ideas
 
 For setup help (wiring, RS-485 adapters, Modbus settings) use [Discussions → Q&A](https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/q-a).
+To share how it works with your model, post in [Discussions → Compatibility](https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/compatibility).
 Feature ideas go to [Discussions → Ideas](https://github.com/Barracuda1984/ha-brink-flair/discussions/categories/ideas).
 
 ## Reporting bugs and model compatibility
