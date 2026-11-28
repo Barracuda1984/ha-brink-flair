@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.1.1] — 2026-11-28
+
+The integration no longer writes to the unit when Home Assistant starts.
 
 ### Changed
 - **The integration no longer writes to the unit during setup.** Earlier versions switched the unit to Modbus control (register 8000 = 1) on every Home Assistant start, which overrode the wall switch and the unit's own CO2 control, even for users who only wanted the sensors. Modbus control is now taken only right before a **Ventilation Mode** or **Standby** command, and only when the unit is under its own control. This also covers the unit resetting register 8000 after a power loss, which previously made those commands silently do nothing until the next restart.
