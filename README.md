@@ -314,7 +314,8 @@ Go to **Settings → Devices & services → Brink Flair**, open the device and c
 ## Known limitations
 
 - **Frost Fan Reduction** reports 100 % even when there is no frost (observed on the tested Flair 400 with firmware S3.01.05, and on firmware S2.01.21 by [pkasarda/ha-brink-modbus](https://github.com/pkasarda/ha-brink-modbus)), although the Brink documentation defines 100 % as maximum reduction. Read it together with **Frost Status**.
-- After you change **Ventilation Mode** or **Standby** from Home Assistant, the unit stays under Modbus control: the wall switch and the unit's own CO2-based control are overridden until the integration is reloaded or the unit loses power. See [Configuration](#configuration).
+- After you change **Ventilation Mode** or **Standby** from Home Assistant, the unit stays under Modbus control until the integration is reloaded or the unit loses power. See [Configuration](#configuration). According to the Brink manual, the display and the wall switch cannot change the ventilation step while Modbus control is active, and the unit's own CO2-based control is overridden.
+  - Observed on the tested Flair 400 (firmware S3.01.05): the **display still works**. Choosing a step on the display switches the status to *Manual* for a few seconds, then the unit returns to *Auto (Modbus)* and keeps the chosen step, which also appears in the Ventilation Mode select (register 8001). The wall switch and CO2 control have not been tested in Modbus mode.
 - Optional sensors (NTC2, RHT humidity, CO2 1–4) show as *unknown* when they are not fitted.
 
 ## Credits
