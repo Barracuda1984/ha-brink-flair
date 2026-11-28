@@ -1,6 +1,6 @@
 # Brink Flair — Home Assistant Custom Integration
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![GitHub Release](https://img.shields.io/github/v/release/Barracuda1984/ha-brink-flair)](https://github.com/Barracuda1984/ha-brink-flair/releases)
 [![Validate](https://github.com/Barracuda1984/ha-brink-flair/actions/workflows/validate.yml/badge.svg)](https://github.com/Barracuda1984/ha-brink-flair/actions/workflows/validate.yml)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.9%2B-41BDF5.svg)](https://www.home-assistant.io/)
@@ -64,7 +64,7 @@ Tested environment: Flair 400 with firmware S3.01.05.0001 / hardware H2.1, Home 
 - On a Plus unit, jumpers X12, X121 and X122 must stay fitted on the UWA2-B board.
 - Cascaded units must be connected through the master appliance with the Plus board UWA2-E.
 
-Source: Brink *Modbus UWA2-B/UWA2-E installation regulations* (614882), available on the [Brink website](https://www.brinkclimatesystems.com).
+Source: Brink [*Modbus UWA2-B/UWA2-E installation regulations* (614882, PDF)](https://www.brinkclimatesystems.nl/documenten/modbus-uwa2-b-uwa2-e-installation-regulations-614882.pdf).
 
 ![Modbus connector on the UWA2-B board](docs/images/wiring-modbus.jpg)
 
@@ -83,21 +83,19 @@ On the Brink Flair touchscreen set:
 | 14.3 Baudrate | _(must match HA config)_ | **19200** |
 | 14.4 Parity | Even | Even |
 
+For all display settings see the Brink [*Flair 400 installation regulations* (614895, PDF)](https://www.brinkclimatesystems.nl/documenten/flair-400-installation-regulations-gb-614895.pdf); manuals for other models are on the [Brink downloads page](https://www.brinkclimatesystems.nl/support/downloads).
+
 ![Display menus 14.1 Type of Bus = Modbus and 14.4 Parity = Even (Czech display language)](docs/images/display-modbus-menu.jpg)
 
 ## Installation
 
 ### HACS (recommended)
 
-Click the button to open the repository in HACS, then **Download** and restart Home Assistant:
+The integration is in the HACS default store. Open HACS, search for **Brink Flair**, click **Download** and restart Home Assistant. Or click the button to open it in HACS directly:
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Barracuda1984&repository=ha-brink-flair&category=integration)
 
-Or add it manually:
-
-1. Open HACS → ⋮ → **Custom repositories**
-2. Add `https://github.com/Barracuda1984/ha-brink-flair` with type **Integration**
-3. Search for **Brink Flair**, download it and restart Home Assistant
+> If you added this repository to HACS as a custom repository before, you can remove it from **HACS → ⋮ → Custom repositories**. The installed integration stays.
 
 ### Manual
 

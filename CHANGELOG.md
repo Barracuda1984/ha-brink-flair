@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- The integration is now in the HACS default store: README badge and installation steps updated, adding a custom repository is no longer needed
+- Brink manuals are no longer bundled in the repository (`doc/`); the README links to them on the Brink website instead
+- New Discussions category **Compatibility** for reports from other Brink models, linked from the issue chooser and CONTRIBUTING
+
+---
+
 ## [1.1.1] — 2026-11-28
 
 The integration no longer writes to the unit when Home Assistant starts.
